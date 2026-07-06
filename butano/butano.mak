@@ -50,12 +50,12 @@ CWARNINGS   :=	-Wall -Wextra -Wpedantic -Wshadow -Wundef -Wunused-parameter -Wmi
 				-Wstack-usage=16384
 
 CFLAGS      :=	$(CWARNINGS) -gdwarf-4 -O2 -mcpu=arm7tdmi -mtune=arm7tdmi -ffast-math -ffunction-sections \
-				-fdata-sections $(ARCH)
+				-fdata-sections $(ARCH) -std=c17
 CFLAGS      +=	$(INCLUDE)
 CFLAGS      +=	$(USERFLAGS)
 
 CPPWARNINGS	:=	-Wuseless-cast -Wnon-virtual-dtor -Woverloaded-virtual
-CXXFLAGS    :=	$(CFLAGS) $(CPPWARNINGS) -std=c++20 -fno-rtti -fno-exceptions
+CXXFLAGS    :=	$(filter-out -std=c17,$(CFLAGS)) $(CPPWARNINGS) -std=c++20 -fno-rtti -fno-exceptions
 
 ASFLAGS     :=	-gdwarf-4 $(ARCH) $(USERASFLAGS)
 LDFLAGS     =	-gdwarf-4 $(ARCH) -Wl,-Map,$(notdir $*.map) $(USERLDFLAGS)
