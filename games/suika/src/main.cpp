@@ -74,7 +74,7 @@ namespace
     {
         static const bn::fixed radii[MAX_TYPE + 1] =
         {
-            5, 7, 10, 13, 15, 19, 22, 25, 28, 30, 31
+            4, 7, 7, 9, 11, 17, 20, 25, 28, 30, 31
         };
 
         return radii[type];
