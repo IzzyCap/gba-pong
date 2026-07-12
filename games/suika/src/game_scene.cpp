@@ -4,6 +4,8 @@
 #include "bn_string.h"
 #include "bn_algorithm.h"
 
+#include "high_scores.h"
+
 namespace suika
 {
 
@@ -113,9 +115,24 @@ bn::optional<scene_type> game_scene::update()
         if(++_overflow_frames > OVERFLOW_LIMIT)
         {
             _current_sprite.set_visible(false);
-            _text_generator.set_center_alignment();
-            _text_generator.generate(0, -8, "GAME OVER", _msg_sprites);
-            _text_generator.generate(0, 6, "Press START", _msg_sprites);
+
+            if(! _score_saved)
+            {
+                int rank = submit_high_score(_score);
+                _score_saved = true;
+
+                _text_generator.set_center_alignment();
+                _text_generator.generate(0, -8, "GAME OVER", _msg_sprites);
+
+                if(rank >= 0)
+                {
+                    bn::string<32> text = "New rank #" + bn::to_string<32>(rank + 1) + "!";
+                    _text_generator.generate(0, 6, text, _msg_sprites);
+                }
+
+                _text_generator.generate(0, 20, "Press START", _msg_sprites);
+            }
+
             _game_over = true;
         }
     }

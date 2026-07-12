@@ -47,7 +47,10 @@ menu_scene.o: /home/izzy/gba-pong/games/suika/src/menu_scene.cpp \
  /home/izzy/gba-pong/butano/include/bn_string_view.h \
  /home/izzy/gba-pong/games/suika/include/scene.h \
  /home/izzy/gba-pong/butano/include/bn_optional.h \
- /home/izzy/gba-pong/butano/include/bn_keypad.h
+ /home/izzy/gba-pong/butano/include/bn_keypad.h \
+ /home/izzy/gba-pong/butano/include/bn_string.h \
+ /home/izzy/gba-pong/games/suika/include/high_scores.h \
+ /home/izzy/gba-pong/butano/include/bn_array.h
 /home/izzy/gba-pong/games/suika/include/menu_scene.h:
 /home/izzy/gba-pong/butano/include/bn_vector.h:
 /home/izzy/gba-pong/butano/include/bn_assert.h:
@@ -97,3 +100,6 @@ menu_scene.o: /home/izzy/gba-pong/games/suika/src/menu_scene.cpp \
 /home/izzy/gba-pong/games/suika/include/scene.h:
 /home/izzy/gba-pong/butano/include/bn_optional.h:
 /home/izzy/gba-pong/butano/include/bn_keypad.h:
+/home/izzy/gba-pong/butano/include/bn_string.h:
+/home/izzy/gba-pong/games/suika/include/high_scores.h:
+/home/izzy/gba-pong/butano/include/bn_array.h:

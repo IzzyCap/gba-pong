@@ -21,7 +21,7 @@ public:
     [[nodiscard]] bn::optional<scene_type> update() final;
 
 private:
-    bn::vector<bn::sprite_ptr, 48> _text_sprites;
+    bn::vector<bn::sprite_ptr, 80> _text_sprites;
     bn::vector<bn::sprite_ptr, 16> _prompt_sprites;
     int _blink = 0;
 };

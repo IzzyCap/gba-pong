@@ -27,7 +27,7 @@ private:
     bn::random _random;
     fruit_vector _fruits;
     bn::vector<bn::sprite_ptr, 24> _score_sprites;
-    bn::vector<bn::sprite_ptr, 32> _msg_sprites;
+    bn::vector<bn::sprite_ptr, 40> _msg_sprites;
     bn::vector<bn::sprite_ptr, 6> _next_label;
     int _current_type;
     int _next_type;
@@ -39,6 +39,7 @@ private:
     int _last_score = -1;
     int _overflow_frames = 0;
     bool _game_over = false;
+    bool _score_saved = false;
 
     void _refresh_score();
 };

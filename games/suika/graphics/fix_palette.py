@@ -52,12 +52,15 @@ def fix_sprite(path):
             magenta_idx = i
             break
 
-    if magenta_idx is None:
-        print(f"  SKIP {path}: no magenta (255,0,255) found in palette")
+    has_magenta = magenta_idx is not None
+
+    if has_magenta and magenta_idx == 0 and bpp == 4:
+        print(f"  OK   {path}: already correct (4bpp, magenta at idx0)")
         return False
 
-    if magenta_idx == 0 and bpp == 4:
-        print(f"  OK   {path}: already correct (4bpp, magenta at idx0)")
+    if not has_magenta and bpp == 4:
+        # Opaque image (e.g. a full-screen background) — nothing to remap.
+        print(f"  OK   {path}: already 4bpp (opaque, no magenta needed)")
         return False
 
     # Read all pixel indices
@@ -76,16 +79,22 @@ def fix_sprite(path):
             row = row[:width]
         pixels.append(row)
 
-    # Build new palette: magenta first, then all other used colors
+    # Build new palette. If magenta exists it must sit at index 0 (transparent
+    # on GBA). Otherwise (e.g. a full-screen background) keep the colours in
+    # their original order without reserving a transparent slot.
     used_indices = set()
     for row in pixels:
         used_indices.update(row)
-    used_indices.discard(magenta_idx)
 
-    # New palette order: [magenta, ...other used colors sorted by original index, ...padding]
-    new_palette = [palette[magenta_idx]]
-    old_to_new = {magenta_idx: 0}
-    slot = 1
+    new_palette = []
+    old_to_new = {}
+    slot = 0
+    if has_magenta:
+        new_palette.append(palette[magenta_idx])
+        old_to_new[magenta_idx] = 0
+        slot = 1
+        used_indices.discard(magenta_idx)
+
     for old_idx in sorted(used_indices):
         if old_idx < len(palette):
             new_palette.append(palette[old_idx])
@@ -93,6 +102,10 @@ def fix_sprite(path):
             new_palette.append((0, 0, 0))
         old_to_new[old_idx] = slot
         slot += 1
+
+    if len(new_palette) > 16:
+        print(f"  ERROR {path}: {len(new_palette)} colors used — too many for 4bpp")
+        return False
 
     # Pad to 16 colors for 4bpp
     while len(new_palette) < 16:
@@ -135,7 +148,10 @@ def fix_sprite(path):
 
     with open(path, "wb") as f:
         f.write(out)
-    print(f"  FIXED {path}: {bpp}bpp→4bpp, magenta moved idx{magenta_idx}→idx0")
+    if has_magenta:
+        print(f"  FIXED {path}: {bpp}bpp→4bpp, magenta moved idx{magenta_idx}→idx0")
+    else:
+        print(f"  FIXED {path}: {bpp}bpp→4bpp (opaque, no magenta)")
     return True
 
 

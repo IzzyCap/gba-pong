@@ -37,8 +37,8 @@ namespace
     // fruits lively for longer before they freeze; lower WAKE_PENETRATION lets a
     // new drop disturb an already-settled pile more easily.
     constexpr bn::fixed SLEEP_DRIFT_EPS = 2;       // wander allowed from the settle anchor
-    constexpr int SLEEP_FRAMES = 14;               // frames staying put before a fruit sleeps
-    constexpr bn::fixed WAKE_PENETRATION = 2;      // overlap big enough to wake a sleeper
+    constexpr int SLEEP_FRAMES = 24;               // frames staying put before a fruit sleeps
+    constexpr bn::fixed WAKE_PENETRATION = 1.8;      // overlap big enough to wake a sleeper
 
     void clamp_to_walls(fruit_t& f)
     {
@@ -102,7 +102,7 @@ bn::fixed fruit_radius(int type)
 {
     static const bn::fixed radii[MAX_TYPE + 1] =
     {
-        4, 7, 7, 10, 11, 17, 18, 18, 21, 30
+        4, 7, 7, 10, 11, 17, 18, 18, 21, 28
     };
 
     return radii[type];
