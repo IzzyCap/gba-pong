@@ -29,10 +29,14 @@ private:
     bn::vector<bn::sprite_ptr, 24> _score_sprites;
     bn::vector<bn::sprite_ptr, 40> _msg_sprites;
     bn::vector<bn::sprite_ptr, 6> _next_label;
+    bn::vector<bn::sprite_ptr, 6> _hold_label;
     int _current_type;
     int _next_type;
+    int _hold_type = -1;   // -1 = nothing held yet
     bn::sprite_ptr _current_sprite;
     bn::sprite_ptr _next_sprite;
+    bn::sprite_ptr _score_panel;
+    bn::optional<bn::sprite_ptr> _hold_sprite;
     bn::fixed _cursor_x = 0;
     int _drop_cooldown = 0;
     int _score = 0;

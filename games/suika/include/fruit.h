@@ -29,11 +29,7 @@ struct fruit_t
     bn::fixed y;
     bn::fixed vx;
     bn::fixed vy;
-    bn::fixed anchor_x;   // spot where the fruit began settling
-    bn::fixed anchor_y;
     int type;
-    int settle_frames;
-    bool asleep;
     bn::sprite_ptr sprite;
 };
 
