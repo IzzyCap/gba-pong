@@ -6,16 +6,15 @@
  * The goal is to make the biggest fruit and score points.
  *
  * Each screen lives in its own scene (see menu_scene / game_scene); this file
- * just owns the shared background + font and swaps between scenes.
+ * just owns the shared font and swaps between scenes. Each scene creates its
+ * own background (menu: suika_bg, game: suika_game_zone).
  */
 
 #include "bn_core.h"
 #include "bn_unique_ptr.h"
-#include "bn_regular_bg_ptr.h"
 #include "bn_sprite_text_generator.h"
 
 #include "common_variable_8x8_sprite_font.h"
-#include "bn_regular_bg_items_suika_bg.h"
 
 #include "scene.h"
 #include "menu_scene.h"
@@ -42,7 +41,6 @@ int main()
 {
     bn::core::init();
 
-    bn::regular_bg_ptr bg = bn::regular_bg_items::suika_bg.create_bg(0, 0);
     bn::sprite_text_generator text_generator(common::variable_8x8_sprite_font);
 
     bn::unique_ptr<suika::scene> scene = make_scene(suika::scene_type::menu, text_generator);

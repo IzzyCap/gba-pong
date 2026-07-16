@@ -5,10 +5,13 @@
 
 #include "high_scores.h"
 
+#include "bn_regular_bg_items_suika_bg.h"
+
 namespace suika
 {
 
-menu_scene::menu_scene(bn::sprite_text_generator& text_generator)
+menu_scene::menu_scene(bn::sprite_text_generator& text_generator) :
+    _bg(bn::regular_bg_items::suika_bg.create_bg(0, 0))
 {
     text_generator.set_center_alignment();
     text_generator.generate(0, -60, "SUIKA", _text_sprites);

@@ -1,0 +1,1 @@
+suika_game_zone_bn_gfx.o: suika_game_zone_bn_gfx.s

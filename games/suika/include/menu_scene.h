@@ -3,6 +3,7 @@
 
 #include "bn_vector.h"
 #include "bn_sprite_ptr.h"
+#include "bn_regular_bg_ptr.h"
 #include "bn_sprite_text_generator.h"
 
 #include "scene.h"
@@ -21,6 +22,7 @@ public:
     [[nodiscard]] bn::optional<scene_type> update() final;
 
 private:
+    bn::regular_bg_ptr _bg;
     bn::vector<bn::sprite_ptr, 80> _text_sprites;
     bn::vector<bn::sprite_ptr, 16> _prompt_sprites;
     int _blink = 0;

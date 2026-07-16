@@ -26,6 +26,7 @@ menu_scene.o: /home/izzy/gba-pong/games/suika/src/menu_scene.cpp \
  /home/izzy/gba-pong/butano/include/bn_unique_ptr_fwd.h \
  /home/izzy/gba-pong/butano/include/bn_config_log.h \
  /home/izzy/gba-pong/butano/include/bn_log_backend.h \
+ /home/izzy/gba-pong/butano/include/bn_regular_bg_ptr.h \
  /home/izzy/gba-pong/butano/include/bn_sprite_text_generator.h \
  /home/izzy/gba-pong/butano/include/bn_vector.h \
  /home/izzy/gba-pong/butano/include/bn_sprite_font.h \
@@ -50,7 +51,15 @@ menu_scene.o: /home/izzy/gba-pong/games/suika/src/menu_scene.cpp \
  /home/izzy/gba-pong/butano/include/bn_keypad.h \
  /home/izzy/gba-pong/butano/include/bn_string.h \
  /home/izzy/gba-pong/games/suika/include/high_scores.h \
- /home/izzy/gba-pong/butano/include/bn_array.h
+ /home/izzy/gba-pong/butano/include/bn_array.h \
+ /home/izzy/gba-pong/games/suika/build/bn_regular_bg_items_suika_bg.h \
+ /home/izzy/gba-pong/butano/include/bn_regular_bg_item.h \
+ /home/izzy/gba-pong/butano/include/bn_bg_palette_item.h \
+ /home/izzy/gba-pong/butano/include/bn_regular_bg_map_item.h \
+ /home/izzy/gba-pong/butano/include/bn_size.h \
+ /home/izzy/gba-pong/butano/include/bn_point.h \
+ /home/izzy/gba-pong/butano/include/bn_regular_bg_map_cell.h \
+ /home/izzy/gba-pong/butano/include/bn_regular_bg_tiles_item.h
 /home/izzy/gba-pong/games/suika/include/menu_scene.h:
 /home/izzy/gba-pong/butano/include/bn_vector.h:
 /home/izzy/gba-pong/butano/include/bn_assert.h:
@@ -78,6 +87,7 @@ menu_scene.o: /home/izzy/gba-pong/games/suika/src/menu_scene.cpp \
 /home/izzy/gba-pong/butano/include/bn_unique_ptr_fwd.h:
 /home/izzy/gba-pong/butano/include/bn_config_log.h:
 /home/izzy/gba-pong/butano/include/bn_log_backend.h:
+/home/izzy/gba-pong/butano/include/bn_regular_bg_ptr.h:
 /home/izzy/gba-pong/butano/include/bn_sprite_text_generator.h:
 /home/izzy/gba-pong/butano/include/bn_vector.h:
 /home/izzy/gba-pong/butano/include/bn_sprite_font.h:
@@ -103,3 +113,11 @@ menu_scene.o: /home/izzy/gba-pong/games/suika/src/menu_scene.cpp \
 /home/izzy/gba-pong/butano/include/bn_string.h:
 /home/izzy/gba-pong/games/suika/include/high_scores.h:
 /home/izzy/gba-pong/butano/include/bn_array.h:
+/home/izzy/gba-pong/games/suika/build/bn_regular_bg_items_suika_bg.h:
+/home/izzy/gba-pong/butano/include/bn_regular_bg_item.h:
+/home/izzy/gba-pong/butano/include/bn_bg_palette_item.h:
+/home/izzy/gba-pong/butano/include/bn_regular_bg_map_item.h:
+/home/izzy/gba-pong/butano/include/bn_size.h:
+/home/izzy/gba-pong/butano/include/bn_point.h:
+/home/izzy/gba-pong/butano/include/bn_regular_bg_map_cell.h:
+/home/izzy/gba-pong/butano/include/bn_regular_bg_tiles_item.h:
