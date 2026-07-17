@@ -52,17 +52,23 @@ main.o: /home/izzy/gba-pong/games/suika/src/main.cpp \
  /home/izzy/gba-pong/butano/include/bn_sprite_item.h \
  /home/izzy/gba-pong/games/suika/include/scene.h \
  /home/izzy/gba-pong/butano/include/bn_optional.h \
- /home/izzy/gba-pong/games/suika/include/menu_scene.h \
+ /home/izzy/gba-pong/games/suika/include/menu/menu_scene.h \
  /home/izzy/gba-pong/butano/include/bn_vector.h \
  /home/izzy/gba-pong/butano/include/bn_sprite_ptr.h \
  /home/izzy/gba-pong/butano/include/bn_regular_bg_ptr.h \
+ /home/izzy/gba-pong/games/suika/include/menu/settings_scene.h \
+ /home/izzy/gba-pong/games/suika/include/creepy_scene.h \
  /home/izzy/gba-pong/games/suika/include/scene.h \
  /home/izzy/gba-pong/games/suika/include/game_scene.h \
  /home/izzy/gba-pong/butano/include/bn_random.h \
  /home/izzy/gba-pong/butano/include/bn_limits.h \
  /home/izzy/gba-pong/butano/include/bn_sprite_tiles_ptr.h \
  /home/izzy/gba-pong/games/suika/include/fruit.h \
- /home/izzy/gba-pong/butano/include/bn_fixed.h
+ /home/izzy/gba-pong/butano/include/bn_fixed.h \
+ /home/izzy/gba-pong/games/suika/include/menu/settings.h \
+ /home/izzy/gba-pong/butano/include/bn_sram.h \
+ /home/izzy/gba-pong/butano/include/../hw/include/bn_hw_sram_constants.h \
+ /home/izzy/gba-pong/butano/include/bn_common.h
 /home/izzy/gba-pong/butano/include/bn_core.h:
 /home/izzy/gba-pong/butano/include/bn_span.h:
 /home/izzy/gba-pong/butano/include/bn_array.h:
@@ -116,10 +122,12 @@ main.o: /home/izzy/gba-pong/games/suika/src/main.cpp \
 /home/izzy/gba-pong/butano/include/bn_sprite_item.h:
 /home/izzy/gba-pong/games/suika/include/scene.h:
 /home/izzy/gba-pong/butano/include/bn_optional.h:
-/home/izzy/gba-pong/games/suika/include/menu_scene.h:
+/home/izzy/gba-pong/games/suika/include/menu/menu_scene.h:
 /home/izzy/gba-pong/butano/include/bn_vector.h:
 /home/izzy/gba-pong/butano/include/bn_sprite_ptr.h:
 /home/izzy/gba-pong/butano/include/bn_regular_bg_ptr.h:
+/home/izzy/gba-pong/games/suika/include/menu/settings_scene.h:
+/home/izzy/gba-pong/games/suika/include/creepy_scene.h:
 /home/izzy/gba-pong/games/suika/include/scene.h:
 /home/izzy/gba-pong/games/suika/include/game_scene.h:
 /home/izzy/gba-pong/butano/include/bn_random.h:
@@ -127,3 +135,7 @@ main.o: /home/izzy/gba-pong/games/suika/src/main.cpp \
 /home/izzy/gba-pong/butano/include/bn_sprite_tiles_ptr.h:
 /home/izzy/gba-pong/games/suika/include/fruit.h:
 /home/izzy/gba-pong/butano/include/bn_fixed.h:
+/home/izzy/gba-pong/games/suika/include/menu/settings.h:
+/home/izzy/gba-pong/butano/include/bn_sram.h:
+/home/izzy/gba-pong/butano/include/../hw/include/bn_hw_sram_constants.h:
+/home/izzy/gba-pong/butano/include/bn_common.h:

@@ -18,7 +18,10 @@
 
 #include "scene.h"
 #include "menu_scene.h"
+#include "settings_scene.h"
+#include "creepy_scene.h"
 #include "game_scene.h"
+#include "settings.h"
 
 namespace
 {
@@ -27,6 +30,17 @@ namespace
     {
         switch(type)
         {
+
+        case suika::scene_type::settings:
+            return bn::unique_ptr<suika::scene>(new suika::settings_scene(text_generator));
+
+        case suika::scene_type::creepy_game_over:
+            return bn::unique_ptr<suika::scene>(
+                new suika::creepy_scene(text_generator, suika::scene_type::menu));
+
+        case suika::scene_type::creepy_admin:
+            return bn::unique_ptr<suika::scene>(
+                new suika::creepy_scene(text_generator, suika::scene_type::settings));
 
         case suika::scene_type::game:
             return bn::unique_ptr<suika::scene>(new suika::game_scene(text_generator));
@@ -40,6 +54,9 @@ namespace
 int main()
 {
     bn::core::init();
+
+    // Restore the admin unlock state and Corrupted Fruits toggle from SRAM.
+    suika::settings_load();
 
     bn::sprite_text_generator text_generator(common::variable_8x8_sprite_font);
 

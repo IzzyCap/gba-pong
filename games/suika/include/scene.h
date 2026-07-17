@@ -9,6 +9,9 @@ namespace suika
 enum class scene_type
 {
     menu,
+    settings,
+    creepy_game_over,
+    creepy_admin,
     game
 };
 

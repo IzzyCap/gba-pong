@@ -29,6 +29,13 @@ namespace
     constexpr bn::fixed DROP_LINE_Y[] = {-48, -16, 16, 48};
     constexpr int DROP_LINE_FRAMES = 8;     // frames in drop_line.bmp (8x256)
     constexpr int DROP_LINE_ANIM_SPEED = 4; // game frames between animation steps
+
+    // Persisted top-3 ranking, tucked into the bottom-right corner (right-aligned).
+    constexpr bn::fixed RANK_X = 116;
+    constexpr bn::fixed RANK_LABEL_Y = 36;
+    constexpr bn::fixed RANK_FIRST_Y = 49;
+    constexpr bn::fixed RANK_LINE_H = 12;
+    constexpr int RANK_COUNT = 3;
 }
 
 game_scene::game_scene(bn::sprite_text_generator& text_generator) :
@@ -73,6 +80,19 @@ game_scene::game_scene(bn::sprite_text_generator& text_generator) :
     _text_generator.generate(HOLD_X, HOLD_LABEL_Y, "HOLD", _hold_label);
     _text_generator.generate(SCORE_X, SCORE_LABEL_Y, "SCORE", _score_label);
     _refresh_score();
+
+    // Persisted top-3 ranking in the bottom-right corner.
+    high_score_table scores = load_high_scores();
+    _text_generator.set_right_alignment();
+    _text_generator.generate(RANK_X, RANK_LABEL_Y, "TOP 3", _ranking_sprites);
+
+    for(int i = 0; i < RANK_COUNT; ++i)
+    {
+        bn::string<16> line = bn::to_string<8>(i + 1) + ". " + bn::to_string<8>(scores[i]);
+        _text_generator.generate(RANK_X, RANK_FIRST_Y + i * RANK_LINE_H, line, _ranking_sprites);
+    }
+
+    _text_generator.set_center_alignment();
 }
 
 void game_scene::_refresh_score()
@@ -92,7 +112,7 @@ bn::optional<scene_type> game_scene::update()
     {
         if(bn::keypad::start_pressed())
         {
-            return scene_type::menu;
+            return scene_type::creepy_game_over;
         }
 
         return bn::nullopt;

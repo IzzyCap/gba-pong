@@ -9,7 +9,7 @@ namespace suika
 {
 
 // ---- gameplay tuning ------------------------------------------------------
-constexpr int MAX_TYPE = 9;        // fruit_9 is the biggest fruit
+constexpr int MAX_TYPE = 10;       // fruit_10 is the biggest fruit
 constexpr int SPAWN_MAX_TYPE = 4;  // only the 5 smallest fruits can be dropped
 constexpr int MAX_FRUITS = 48;
 

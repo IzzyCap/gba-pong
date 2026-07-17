@@ -52,7 +52,8 @@ fruit.o: /home/izzy/gba-pong/games/suika/src/fruit.cpp \
  /home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_6.h \
  /home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_7.h \
  /home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_8.h \
- /home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_9.h
+ /home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_9.h \
+ /home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_10.h
 /home/izzy/gba-pong/games/suika/include/fruit.h:
 /home/izzy/gba-pong/butano/include/bn_fixed.h:
 /home/izzy/gba-pong/butano/include/bn_compare.h:
@@ -107,3 +108,4 @@ fruit.o: /home/izzy/gba-pong/games/suika/src/fruit.cpp \
 /home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_7.h:
 /home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_8.h:
 /home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_9.h:
+/home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_10.h:

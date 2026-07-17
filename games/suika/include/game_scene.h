@@ -35,6 +35,7 @@ private:
     bn::vector<bn::sprite_ptr, 6> _next_label;
     bn::vector<bn::sprite_ptr, 6> _hold_label;
     bn::vector<bn::sprite_ptr, 6> _score_label;
+    bn::vector<bn::sprite_ptr, 48> _ranking_sprites;  // persisted top-3, bottom-right
     int _current_type;
     int _next_type;
     int _hold_type = -1;   // -1 = nothing held yet

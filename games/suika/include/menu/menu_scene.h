@@ -11,8 +11,8 @@
 namespace suika
 {
 
-// Title screen: shows the game name, the controls and a blinking prompt.
-// Pressing A or START starts a new game.
+// Title screen with a small menu: "Start" launches a game and "Settings" opens
+// the settings screen. Move with UP/DOWN and confirm with A or START.
 class menu_scene : public scene
 {
 
@@ -22,10 +22,13 @@ public:
     [[nodiscard]] bn::optional<scene_type> update() final;
 
 private:
+    bn::sprite_text_generator& _text_generator;
     bn::regular_bg_ptr _bg;
-    bn::vector<bn::sprite_ptr, 80> _text_sprites;
-    bn::vector<bn::sprite_ptr, 16> _prompt_sprites;
-    int _blink = 0;
+    bn::vector<bn::sprite_ptr, 32> _title_sprites;
+    bn::vector<bn::sprite_ptr, 32> _option_sprites;
+    int _selected = 0;   // 0 = Start, 1 = Settings
+
+    void _refresh_options();
 };
 
 }

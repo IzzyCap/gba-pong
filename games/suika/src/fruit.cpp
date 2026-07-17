@@ -12,6 +12,7 @@
 #include "bn_sprite_items_fruit_7.h"
 #include "bn_sprite_items_fruit_8.h"
 #include "bn_sprite_items_fruit_9.h"
+#include "bn_sprite_items_fruit_10.h"
 
 namespace suika
 {
@@ -96,7 +97,7 @@ namespace suika
     {
         static const bn::fixed radii[MAX_TYPE + 1] =
         {
-            4, 7, 7, 10, 11, 17, 18, 18, 21, 28
+            4, 7, 7, 10, 11, 17, 18, 18, 21, 28, 30
         };
 
         return radii[type];
@@ -115,7 +116,8 @@ namespace suika
         case 6:  return bn::sprite_items::fruit_6.create_sprite(x, y);
         case 7:  return bn::sprite_items::fruit_7.create_sprite(x, y);
         case 8:  return bn::sprite_items::fruit_8.create_sprite(x, y);
-        default: return bn::sprite_items::fruit_9.create_sprite(x, y);
+        case 9:  return bn::sprite_items::fruit_9.create_sprite(x, y);
+        default: return bn::sprite_items::fruit_10.create_sprite(x, y);
         }
     }
 
