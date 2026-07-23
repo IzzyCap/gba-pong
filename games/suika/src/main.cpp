@@ -22,6 +22,7 @@
 #include "creepy_scene.h"
 #include "game_scene.h"
 #include "settings.h"
+#include "story.h"
 
 namespace
 {
@@ -57,6 +58,9 @@ int main()
 
     // Restore the admin unlock state and Corrupted Fruits toggle from SRAM.
     suika::settings_load();
+
+    // Restore how far the player has progressed through the hidden storyline.
+    suika::story_load();
 
     bn::sprite_text_generator text_generator(common::variable_8x8_sprite_font);
 

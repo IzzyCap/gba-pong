@@ -33,7 +33,7 @@ fruit.o: /home/izzy/gba-pong/games/suika/src/fruit.cpp \
  /home/izzy/gba-pong/butano/include/bn_sin_lut.h \
  /home/izzy/gba-pong/butano/include/bn_reciprocal_lut.h \
  /home/izzy/gba-pong/butano/include/bn_rule_of_three_approximation.h \
- /home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_0.h \
+ /home/izzy/gba-pong/games/suika/build/bn_sprite_items_corrupted_fruit_0.h \
  /home/izzy/gba-pong/butano/include/bn_sprite_item.h \
  /home/izzy/gba-pong/butano/include/bn_sprite_shape_size.h \
  /home/izzy/gba-pong/butano/include/bn_bpp_mode.h \
@@ -44,6 +44,7 @@ fruit.o: /home/izzy/gba-pong/games/suika/src/fruit.cpp \
  /home/izzy/gba-pong/butano/include/bn_compression_type.h \
  /home/izzy/gba-pong/butano/include/bn_sprite_palette_item.h \
  /home/izzy/gba-pong/butano/include/bn_color.h \
+ /home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_0.h \
  /home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_1.h \
  /home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_2.h \
  /home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_3.h \
@@ -88,7 +89,7 @@ fruit.o: /home/izzy/gba-pong/games/suika/src/fruit.cpp \
 /home/izzy/gba-pong/butano/include/bn_sin_lut.h:
 /home/izzy/gba-pong/butano/include/bn_reciprocal_lut.h:
 /home/izzy/gba-pong/butano/include/bn_rule_of_three_approximation.h:
-/home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_0.h:
+/home/izzy/gba-pong/games/suika/build/bn_sprite_items_corrupted_fruit_0.h:
 /home/izzy/gba-pong/butano/include/bn_sprite_item.h:
 /home/izzy/gba-pong/butano/include/bn_sprite_shape_size.h:
 /home/izzy/gba-pong/butano/include/bn_bpp_mode.h:
@@ -99,6 +100,7 @@ fruit.o: /home/izzy/gba-pong/games/suika/src/fruit.cpp \
 /home/izzy/gba-pong/butano/include/bn_compression_type.h:
 /home/izzy/gba-pong/butano/include/bn_sprite_palette_item.h:
 /home/izzy/gba-pong/butano/include/bn_color.h:
+/home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_0.h:
 /home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_1.h:
 /home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_2.h:
 /home/izzy/gba-pong/games/suika/build/bn_sprite_items_fruit_3.h:

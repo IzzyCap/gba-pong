@@ -9,11 +9,11 @@
 //
 //	suika_bg_bn_gfx, 256x256@4, 
 //	+ palette 16 entries, not compressed
-//	+ 60 tiles (t|f|p reduced) not compressed
+//	+ 59 tiles (t|f|p reduced) not compressed
 //	+ regular map (flat), not compressed, 32x32 
-//	Total size: 32 + 1920 + 2048 = 4000
+//	Total size: 32 + 1888 + 2048 = 3968
 //
-//	Time-stamp: 2026-07-17, 16:54:26
+//	Time-stamp: 2026-07-22, 01:33:00
 //	Exported by Cearn's GBA Image Transmogrifier, v0.9.2
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -22,8 +22,8 @@
 #ifndef GRIT_SUIKA_BG_BN_GFX_H
 #define GRIT_SUIKA_BG_BN_GFX_H
 
-#define suika_bg_bn_gfxTilesLen 1920
-extern const bn::tile suika_bg_bn_gfxTiles[60];
+#define suika_bg_bn_gfxTilesLen 1888
+extern const bn::tile suika_bg_bn_gfxTiles[59];
 
 #define suika_bg_bn_gfxMapLen 2048
 extern const bn::regular_bg_map_cell suika_bg_bn_gfxMap[1024];
@@ -38,7 +38,7 @@ extern const bn::color suika_bg_bn_gfxPal[16];
 namespace bn::regular_bg_items
 {
     constexpr inline regular_bg_item suika_bg(
-            regular_bg_tiles_item(span<const tile>(suika_bg_bn_gfxTiles, 60), bpp_mode::BPP_4, compression_type::NONE), 
+            regular_bg_tiles_item(span<const tile>(suika_bg_bn_gfxTiles, 59), bpp_mode::BPP_4, compression_type::NONE), 
             bg_palette_item(span<const color>(suika_bg_bn_gfxPal, 16), bpp_mode::BPP_4, compression_type::NONE),
             regular_bg_map_item(suika_bg_bn_gfxMap[0], size(32, 32), compression_type::NONE));
 }

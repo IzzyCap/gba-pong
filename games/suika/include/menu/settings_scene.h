@@ -7,6 +7,7 @@
 #include "bn_sprite_text_generator.h"
 
 #include "scene.h"
+#include "typewriter_text.h"
 
 namespace suika
 {
@@ -31,7 +32,8 @@ private:
         panel,           // admin panel menu
         system_status,   // read-only status screen
         logs,            // read-only log screen
-        dev_tools        // developer tools menu
+        dev_tools,       // developer tools menu
+        player1_dialog   // Player 1 conversation (typewriter text)
     };
 
     bn::sprite_text_generator& _text_generator;
@@ -43,6 +45,9 @@ private:
     int _admin_selected = 0;   // highlighted option in the admin panel
     int _dev_selected = 0;     // highlighted option in developer tools
     int _combo_progress = 0;   // matched keys of the unlock combo so far
+    int _status_timer = 0;     // frames spent on the System Status screen
+    int _status_selected = 0;  // highlighted entry on the System Status screen
+    typewriter_text _player1_dialog;   // letter-by-letter Player 1 conversation
 
     void _refresh_options();
     void _refresh_title();
@@ -51,6 +56,7 @@ private:
     void _refresh_system_status();
     void _refresh_logs();
     void _refresh_dev_tools();
+    void _refresh_player1_dialog();
 
     // Feeds this frame's input to the unlock combo state machine.
     // Returns 0 if input is free for normal handling, 1 if a combo key was
@@ -60,6 +66,8 @@ private:
     bn::optional<scene_type> _update_list();
     bn::optional<scene_type> _update_panel();
     bn::optional<scene_type> _update_info_screen();
+    bn::optional<scene_type> _update_system_status();
+    bn::optional<scene_type> _update_player1_dialog();
     bn::optional<scene_type> _update_dev_tools();
 };
 

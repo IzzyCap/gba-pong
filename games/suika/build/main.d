@@ -57,6 +57,9 @@ main.o: /home/izzy/gba-pong/games/suika/src/main.cpp \
  /home/izzy/gba-pong/butano/include/bn_sprite_ptr.h \
  /home/izzy/gba-pong/butano/include/bn_regular_bg_ptr.h \
  /home/izzy/gba-pong/games/suika/include/menu/settings_scene.h \
+ /home/izzy/gba-pong/games/suika/include/typewriter_text.h \
+ /home/izzy/gba-pong/butano/include/bn_string.h \
+ /home/izzy/gba-pong/butano/include/bn_string_view.h \
  /home/izzy/gba-pong/games/suika/include/creepy_scene.h \
  /home/izzy/gba-pong/games/suika/include/scene.h \
  /home/izzy/gba-pong/games/suika/include/game_scene.h \
@@ -68,7 +71,8 @@ main.o: /home/izzy/gba-pong/games/suika/src/main.cpp \
  /home/izzy/gba-pong/games/suika/include/menu/settings.h \
  /home/izzy/gba-pong/butano/include/bn_sram.h \
  /home/izzy/gba-pong/butano/include/../hw/include/bn_hw_sram_constants.h \
- /home/izzy/gba-pong/butano/include/bn_common.h
+ /home/izzy/gba-pong/butano/include/bn_common.h \
+ /home/izzy/gba-pong/games/suika/include/story.h
 /home/izzy/gba-pong/butano/include/bn_core.h:
 /home/izzy/gba-pong/butano/include/bn_span.h:
 /home/izzy/gba-pong/butano/include/bn_array.h:
@@ -127,6 +131,9 @@ main.o: /home/izzy/gba-pong/games/suika/src/main.cpp \
 /home/izzy/gba-pong/butano/include/bn_sprite_ptr.h:
 /home/izzy/gba-pong/butano/include/bn_regular_bg_ptr.h:
 /home/izzy/gba-pong/games/suika/include/menu/settings_scene.h:
+/home/izzy/gba-pong/games/suika/include/typewriter_text.h:
+/home/izzy/gba-pong/butano/include/bn_string.h:
+/home/izzy/gba-pong/butano/include/bn_string_view.h:
 /home/izzy/gba-pong/games/suika/include/creepy_scene.h:
 /home/izzy/gba-pong/games/suika/include/scene.h:
 /home/izzy/gba-pong/games/suika/include/game_scene.h:
@@ -139,3 +146,4 @@ main.o: /home/izzy/gba-pong/games/suika/src/main.cpp \
 /home/izzy/gba-pong/butano/include/bn_sram.h:
 /home/izzy/gba-pong/butano/include/../hw/include/bn_hw_sram_constants.h:
 /home/izzy/gba-pong/butano/include/bn_common.h:
+/home/izzy/gba-pong/games/suika/include/story.h:

@@ -5,6 +5,8 @@
 #include "bn_sprite_palette_item.h"
 
 #include "settings.h"
+#include "story.h"
+#include "dialogs.h"
 
 #include "bn_regular_bg_items_suika_bg.h"
 
@@ -27,6 +29,21 @@ namespace
     // Developer Tools menu options (only the first is enabled).
     constexpr int DEV_OPTION_COUNT = 4;
     constexpr int DEV_OPTION_CORRUPTED = 0;
+
+    // Developer Tools stay locked (grayed, not enterable) until the player has
+    // read Player 1's first message, which moves the story to STORY_P1_WARNING.
+    // After that they're unlocked forever, since story progress only moves
+    // forward and is persisted to SRAM.
+    bool dev_tools_unlocked()
+    {
+        return story_progress >= STORY_P1_WARNING;
+    }
+
+    // Selectable entries on the System Status screen.
+    constexpr int STATUS_OPTION_COUNT = 3;
+    constexpr int STATUS_OPTION_PLAYER1 = 0;
+    constexpr int STATUS_OPTION_PLAYER2 = 1;
+    constexpr int STATUS_OPTION_BACK = 2;
 
     // Read-only info screens (System Status / Logs).
     constexpr bn::fixed INFO_START_Y = -36;
@@ -72,11 +89,30 @@ namespace
     constexpr bn::sprite_palette_item GREEN_PALETTE_ITEM(
             bn::span<const bn::color>(GREEN_PALETTE_COLORS, 16),
             bn::bpp_mode::BPP_4, bn::compression_type::NONE);
+
+    // System Status SRAM "OK" -> "HELP" animation timing (60 fps).
+    constexpr int STATUS_HELP_DELAY = 180;   // wait 3 seconds before it starts
+    constexpr int STATUS_HELP_STEP = 60;     // reveal one HELP letter per second
+    constexpr int STATUS_HELP_LEN = 4;       // "HELP"
+
+    // How many letters of "HELP" are shown on the SRAM line for a given timer.
+    // 0 means the line still shows the healthy green "OK".
+    int sram_help_letters(int timer)
+    {
+        if(timer < STATUS_HELP_DELAY)
+        {
+            return 0;
+        }
+
+        int letters = (timer - STATUS_HELP_DELAY) / STATUS_HELP_STEP + 1;
+        return letters > STATUS_HELP_LEN ? STATUS_HELP_LEN : letters;
+    }
 }
 
 settings_scene::settings_scene(bn::sprite_text_generator& text_generator) :
     _text_generator(text_generator),
-    _bg(bn::regular_bg_items::suika_bg.create_bg(0, 0))
+    _bg(bn::regular_bg_items::suika_bg.create_bg(0, 0)),
+    _player1_dialog(text_generator, -84, -18, 14, 3)
 {
     if(admin_panel_pending)
     {
@@ -122,6 +158,10 @@ void settings_scene::_refresh_options()
         _refresh_dev_tools();
         break;
 
+    case view::player1_dialog:
+        _refresh_player1_dialog();
+        break;
+
     default:
         _refresh_list();
         break;
@@ -132,8 +172,19 @@ void settings_scene::_refresh_title()
 {
     _title_sprites.clear();
     _text_generator.set_center_alignment();
-    _text_generator.generate(0, -50, _view == view::list ? "SETTINGS" : "ADMIN PANEL",
-                             _title_sprites);
+
+    const char* title = "ADMIN PANEL";
+
+    if(_view == view::list)
+    {
+        title = "SETTINGS";
+    }
+    else if(_view == view::player1_dialog)
+    {
+        title = "PLAYER 1";
+    }
+
+    _text_generator.generate(0, -50, title, _title_sprites);
 }
 
 void settings_scene::_refresh_list()
@@ -168,6 +219,9 @@ void settings_scene::_refresh_admin_menu()
         "System Status", "Logs", "Developer Tools", "Back"
     };
 
+    const bool dev_locked = ! dev_tools_unlocked();
+    bn::sprite_palette_item normal_palette = _text_generator.palette_item();
+
     bn::fixed y = ADMIN_MENU_START_Y;
 
     for(int i = 0; i < ADMIN_OPTION_COUNT; ++i)
@@ -179,39 +233,110 @@ void settings_scene::_refresh_admin_menu()
             text = bn::string<40>("> ") + text + " <";
         }
 
-        _text_generator.generate(0, y, text, _option_sprites);
+        // Developer Tools is disabled (grayed) until Player 1's first message
+        // has been read.
+        if(i == ADMIN_OPTION_DEV_TOOLS && dev_locked)
+        {
+            _text_generator.set_palette_item(GRAY_PALETTE_ITEM);
+            _text_generator.generate(0, y, text, _option_sprites);
+            _text_generator.set_palette_item(normal_palette);
+        }
+        else
+        {
+            _text_generator.generate(0, y, text, _option_sprites);
+        }
+
         y += OPTION_STEP_Y;
     }
 }
 
 void settings_scene::_refresh_system_status()
 {
-    static const char* const LINES[] = {
-        "ROM.............OK",
-        "SRAM............OK",
-        "INPUT...........OK",
-        "AUDIO...........OK",
-        "",
-        "Player 1",
-        "Assimilation 100%",
-        "Player 2",
-        "Assimilation 6%"
+    // The four hardware self-check lines: a left label with a dot leader plus a
+    // status value drawn in its own color. The value is normally a green "OK";
+    // the SRAM line instead spells out a red "HELP" one letter at a time.
+    struct status_line { const char* prefix; bool is_sram; };
+    static const status_line STATUS_LINES[] = {
+        { "ROM.............", false },
+        { "SRAM............", true  },
+        { "INPUT...........", false },
+        { "AUDIO...........", false }
     };
-    constexpr int LINE_COUNT = 9;
+    constexpr int STATUS_LINE_COUNT = 4;
+
+    const bn::sprite_palette_item normal_palette = _text_generator.palette_item();
+    const int help_letters = sram_help_letters(_status_timer);
 
     _text_generator.set_left_alignment();
 
     bn::fixed y = INFO_START_Y;
 
-    for(int i = 0; i < LINE_COUNT; ++i)
+    for(int i = 0; i < STATUS_LINE_COUNT; ++i)
     {
-        if(LINES[i][0] != '\0')
+        const status_line& line = STATUS_LINES[i];
+
+        // Label / dot leader in the normal palette.
+        _text_generator.set_palette_item(normal_palette);
+        _text_generator.generate(INFO_LEFT_X, y, line.prefix, _option_sprites);
+
+        const bn::fixed value_x = INFO_LEFT_X + _text_generator.width(line.prefix);
+
+        if(line.is_sram && help_letters > 0)
         {
-            _text_generator.generate(INFO_LEFT_X, y, LINES[i], _option_sprites);
+            // SRAM is failing: show the red "HELP" cry, one letter at a time.
+            char value[STATUS_HELP_LEN + 1] = "HELP";
+            value[help_letters] = '\0';
+            _text_generator.set_palette_item(RED_PALETTE_ITEM);
+            _text_generator.generate(value_x, y, value, _option_sprites);
+        }
+        else
+        {
+            _text_generator.set_palette_item(GREEN_PALETTE_ITEM);
+            _text_generator.generate(value_x, y, "OK", _option_sprites);
         }
 
         y += INFO_STEP_Y;
     }
+
+    _text_generator.set_palette_item(normal_palette);
+
+    // Blank spacer between the hardware checks and the player entries.
+    y += INFO_STEP_Y;
+
+    // Player 1 / Player 2 are selectable; their assimilation readouts are plain
+    // text. A final "Back" entry closes the screen. Highlight the current pick
+    // with the usual "> ... <" brackets.
+    auto generate_option = [&](int option, const char* label, bn::fixed line_y)
+    {
+        bn::string<40> text = label;
+
+        if(option == _status_selected)
+        {
+            text = bn::string<40>("> ") + text + " <";
+        }
+
+        _text_generator.generate(INFO_LEFT_X, line_y, text, _option_sprites);
+    };
+
+    generate_option(STATUS_OPTION_PLAYER1, "Player 1", y);
+    y += INFO_STEP_Y;
+    _text_generator.generate(INFO_LEFT_X, y, "Assimilation 100%", _option_sprites);
+    y += INFO_STEP_Y;
+
+    generate_option(STATUS_OPTION_PLAYER2, "Player 2", y);
+    y += INFO_STEP_Y;
+    _text_generator.generate(INFO_LEFT_X, y, "Assimilation 6%", _option_sprites);
+    y += INFO_STEP_Y;
+
+    generate_option(STATUS_OPTION_BACK, "Back", y);
+}
+
+void settings_scene::_refresh_player1_dialog()
+{
+    // The conversation text itself is drawn by the typewriter effect; here we
+    // just add the on-screen hint. The title is handled by _refresh_title().
+    _text_generator.set_center_alignment();
+    _text_generator.generate(0, 62, "A: continue   B: back", _option_sprites);
 }
 
 void settings_scene::_refresh_logs()
@@ -372,6 +497,13 @@ bn::optional<scene_type> settings_scene::_update_list()
             admin_unlocked = true;       // enabled forever from now on
             admin_panel_pending = true;  // open the admin panel after the scare
             settings_save();             // persist the unlock across power cycles
+
+            // First time the admin panel is activated: move the story forward.
+            if(story_progress < STORY_P1_INTRO)
+            {
+                story_set_progress(STORY_P1_INTRO);
+            }
+
             return scene_type::creepy_admin;
         }
     }
@@ -432,6 +564,8 @@ bn::optional<scene_type> settings_scene::_update_panel()
 
         case ADMIN_OPTION_SYSTEM_STATUS:
             _view = view::system_status;
+            _status_timer = 0;
+            _status_selected = 0;
             _refresh_options();
             break;
 
@@ -441,9 +575,13 @@ bn::optional<scene_type> settings_scene::_update_panel()
             break;
 
         case ADMIN_OPTION_DEV_TOOLS:
-            _view = view::dev_tools;
-            _dev_selected = 0;
-            _refresh_options();
+            // Locked until Player 1's first message has been read.
+            if(dev_tools_unlocked())
+            {
+                _view = view::dev_tools;
+                _dev_selected = 0;
+                _refresh_options();
+            }
             break;
 
         case ADMIN_OPTION_BACK:
@@ -467,6 +605,104 @@ bn::optional<scene_type> settings_scene::_update_info_screen()
         _refresh_options();
     }
 
+    return bn::nullopt;
+}
+
+bn::optional<scene_type> settings_scene::_update_system_status()
+{
+    if(bn::keypad::up_pressed())
+    {
+        _status_selected = (_status_selected + STATUS_OPTION_COUNT - 1) % STATUS_OPTION_COUNT;
+        _refresh_options();
+    }
+    else if(bn::keypad::down_pressed())
+    {
+        _status_selected = (_status_selected + 1) % STATUS_OPTION_COUNT;
+        _refresh_options();
+    }
+
+    if(bn::keypad::b_pressed())
+    {
+        _view = view::panel;   // return to the admin panel menu
+        _refresh_options();
+        return bn::nullopt;
+    }
+
+    if(bn::keypad::a_pressed() || bn::keypad::start_pressed())
+    {
+        if(_status_selected == STATUS_OPTION_BACK)
+        {
+            _view = view::panel;
+            _refresh_options();
+            return bn::nullopt;
+        }
+
+        if(_status_selected == STATUS_OPTION_PLAYER1)
+        {
+            // The Player 1 screen is the only place to hear from Player 1. The
+            // line shown depends on how far the story has progressed. Pick the
+            // text for the current stage BEFORE advancing so the first visit
+            // shows the intro line.
+            _view = view::player1_dialog;
+            _player1_dialog.set_text(dialogs::player1());
+
+            _refresh_options();
+            return bn::nullopt;
+        }
+        // Player 2 has no detail screen yet.
+    }
+
+    // Keep driving the SRAM "OK" -> red "HELP" reveal, redrawing only on the
+    // frames where another letter appears.
+    const int before = sram_help_letters(_status_timer);
+    ++_status_timer;
+
+    if(sram_help_letters(_status_timer) != before)
+    {
+        _refresh_options();
+    }
+
+    return bn::nullopt;
+}
+
+bn::optional<scene_type> settings_scene::_update_player1_dialog()
+{
+    const bool go_back = bn::keypad::b_pressed();
+    const bool confirm = bn::keypad::a_pressed() || bn::keypad::start_pressed();
+
+    // Still typing: A/START reveals the rest of the message at once.
+    if(confirm && ! _player1_dialog.done())
+    {
+        _player1_dialog.skip();
+        return bn::nullopt;
+    }
+
+    // Current page fully shown but there is more to read: turn to the next page.
+    // This continues the same message without changing the story progress.
+    if(confirm && _player1_dialog.has_next_page())
+    {
+        _player1_dialog.next_page();
+        return bn::nullopt;
+    }
+
+    if(go_back || confirm)
+    {
+        // Finishing Player 1's first message (last page fully shown) advances the
+        // story once, which unlocks the Developer Tools forever. Leaving early
+        // (B before the whole message is read) does not.
+        if(_player1_dialog.done() && ! _player1_dialog.has_next_page() &&
+           story_progress == STORY_P1_INTRO)
+        {
+            story_set_progress(STORY_P1_WARNING);
+        }
+
+        _player1_dialog.set_text("");   // clear the conversation sprites
+        _view = view::system_status;
+        _refresh_options();
+        return bn::nullopt;
+    }
+
+    _player1_dialog.update();
     return bn::nullopt;
 }
 
@@ -499,6 +735,13 @@ bn::optional<scene_type> settings_scene::_update_dev_tools()
             // menu (where the option now shows as a disabled, grayed "On").
             corrupted_fruits = true;
             settings_save();
+
+            // Enabling Corrupted Fruits changes the game state: move the story on.
+            if(story_progress < STORY_CORRUPTED_FRUITS)
+            {
+                story_set_progress(STORY_CORRUPTED_FRUITS);
+            }
+
             dev_tools_pending = true;
             return scene_type::creepy_admin;
         }
@@ -517,8 +760,13 @@ bn::optional<scene_type> settings_scene::update()
         return _update_panel();
 
     case view::system_status:
+        return _update_system_status();
+
     case view::logs:
         return _update_info_screen();
+
+    case view::player1_dialog:
+        return _update_player1_dialog();
 
     case view::dev_tools:
         return _update_dev_tools();

@@ -49,13 +49,18 @@ settings_scene.o: \
  /home/izzy/gba-pong/butano/include/bn_string_view.h \
  /home/izzy/gba-pong/games/suika/include/scene.h \
  /home/izzy/gba-pong/butano/include/bn_optional.h \
- /home/izzy/gba-pong/butano/include/bn_keypad.h \
+ /home/izzy/gba-pong/games/suika/include/typewriter_text.h \
  /home/izzy/gba-pong/butano/include/bn_string.h \
+ /home/izzy/gba-pong/butano/include/bn_string_view.h \
+ /home/izzy/gba-pong/butano/include/bn_keypad.h \
  /home/izzy/gba-pong/butano/include/bn_sprite_palette_item.h \
  /home/izzy/gba-pong/games/suika/include/menu/settings.h \
  /home/izzy/gba-pong/butano/include/bn_sram.h \
  /home/izzy/gba-pong/butano/include/../hw/include/bn_hw_sram_constants.h \
  /home/izzy/gba-pong/butano/include/bn_common.h \
+ /home/izzy/gba-pong/games/suika/include/story.h \
+ /home/izzy/gba-pong/games/suika/include/dialogs.h \
+ /home/izzy/gba-pong/games/suika/include/story.h \
  /home/izzy/gba-pong/games/suika/build/bn_regular_bg_items_suika_bg.h \
  /home/izzy/gba-pong/butano/include/bn_regular_bg_item.h \
  /home/izzy/gba-pong/butano/include/bn_bg_palette_item.h \
@@ -113,13 +118,18 @@ settings_scene.o: \
 /home/izzy/gba-pong/butano/include/bn_string_view.h:
 /home/izzy/gba-pong/games/suika/include/scene.h:
 /home/izzy/gba-pong/butano/include/bn_optional.h:
-/home/izzy/gba-pong/butano/include/bn_keypad.h:
+/home/izzy/gba-pong/games/suika/include/typewriter_text.h:
 /home/izzy/gba-pong/butano/include/bn_string.h:
+/home/izzy/gba-pong/butano/include/bn_string_view.h:
+/home/izzy/gba-pong/butano/include/bn_keypad.h:
 /home/izzy/gba-pong/butano/include/bn_sprite_palette_item.h:
 /home/izzy/gba-pong/games/suika/include/menu/settings.h:
 /home/izzy/gba-pong/butano/include/bn_sram.h:
 /home/izzy/gba-pong/butano/include/../hw/include/bn_hw_sram_constants.h:
 /home/izzy/gba-pong/butano/include/bn_common.h:
+/home/izzy/gba-pong/games/suika/include/story.h:
+/home/izzy/gba-pong/games/suika/include/dialogs.h:
+/home/izzy/gba-pong/games/suika/include/story.h:
 /home/izzy/gba-pong/games/suika/build/bn_regular_bg_items_suika_bg.h:
 /home/izzy/gba-pong/butano/include/bn_regular_bg_item.h:
 /home/izzy/gba-pong/butano/include/bn_bg_palette_item.h:

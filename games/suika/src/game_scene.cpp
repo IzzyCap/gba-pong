@@ -5,10 +5,12 @@
 #include "bn_algorithm.h"
 
 #include "high_scores.h"
+#include "settings.h"
 
 #include "bn_regular_bg_items_suika_bg.h"
 #include "bn_regular_bg_items_suika_game_zone.h"
 #include "bn_sprite_items_drop_line.h"
+#include "bn_sprite_items_corrupted_fruit_0.h"
 
 namespace suika
 {
@@ -30,6 +32,14 @@ namespace
     constexpr int DROP_LINE_FRAMES = 8;     // frames in drop_line.bmp (8x256)
     constexpr int DROP_LINE_ANIM_SPEED = 4; // game frames between animation steps
 
+    // Corrupted level-0 fruit animation (corrupted_fruit_0.bmp is 16x64 = 4 frames).
+    // Only the first fruit is corrupted; its first frame dwells 3-5 s, then the
+    // remaining frames play at the normal per-frame speed and the cycle repeats.
+    constexpr int CORRUPT_FRAMES = 4;       // vertical frames in corrupted_fruit_0.bmp
+    constexpr int CORRUPT_ANIM_SPEED = 8;   // game frames per step for frames 1..3
+    constexpr int CORRUPT_HOLD_MIN = 180;   // 3 s at 60 fps: frame-0 dwell (min)
+    constexpr int CORRUPT_HOLD_MAX = 300;   // 5 s at 60 fps: frame-0 dwell (max)
+
     // Persisted top-3 ranking, tucked into the bottom-right corner (right-aligned).
     constexpr bn::fixed RANK_X = 116;
     constexpr bn::fixed RANK_LABEL_Y = 36;
@@ -42,9 +52,10 @@ game_scene::game_scene(bn::sprite_text_generator& text_generator) :
     _text_generator(text_generator),
     _bg(bn::regular_bg_items::suika_bg.create_bg(0, 0)),
     _game_zone_bg(bn::regular_bg_items::suika_game_zone.create_bg(0, 0)),
-    _current_type(_random.get_int(0, SPAWN_MAX_TYPE + 1)),
+    _current_type(corrupted_fruits ? 0 : _random.get_int(0, SPAWN_MAX_TYPE + 1)),
     _next_type(_random.get_int(0, SPAWN_MAX_TYPE + 1)),
-    _current_sprite(create_fruit_sprite(_current_type, 0, SPAWN_Y)),
+    _current_corrupt(corrupted_fruits),
+    _current_sprite(create_fruit_sprite(_current_type, 0, SPAWN_Y, _current_corrupt)),
     _next_sprite(create_fruit_sprite(_next_type, 96, -44))
 {
     // Two background layers: the green jar-room (suika_bg) sits at the back and
@@ -73,6 +84,20 @@ game_scene::game_scene(bn::sprite_text_generator& text_generator) :
     for(int i = 0; i < DROP_LINE_FRAMES; ++i)
     {
         _line_tiles.push_back(bn::sprite_items::drop_line.tiles_item().create_tiles(i));
+    }
+
+    // Only the first fruit is corrupted (forced to level 0 above). Pre-build its
+    // animation frames once; the update loop cycles them on the corrupted fruit.
+    if(corrupted_fruits)
+    {
+        for(int i = 0; i < CORRUPT_FRAMES; ++i)
+        {
+            _corrupt_tiles.push_back(
+                    bn::sprite_items::corrupted_fruit_0.tiles_item().create_tiles(i));
+        }
+
+        // Frame 0 lingers a random 3-5 s before the glitchy frames play.
+        _corrupt_timer = _random.get_int(CORRUPT_HOLD_MIN, CORRUPT_HOLD_MAX + 1);
     }
 
     _text_generator.set_center_alignment();
@@ -145,8 +170,11 @@ bn::optional<scene_type> game_scene::update()
         if(_hold_type < 0)
         {
             _hold_type = _current_type;
+            _hold_corrupt = _current_corrupt;
             _current_type = _next_type;
+            _current_corrupt = _next_corrupt;
             _next_type = _random.get_int(0, SPAWN_MAX_TYPE + 1);
+            _next_corrupt = false;
             _next_sprite = create_fruit_sprite(_next_type, 96, -44);
         }
         else
@@ -154,10 +182,14 @@ bn::optional<scene_type> game_scene::update()
             int swapped = _current_type;
             _current_type = _hold_type;
             _hold_type = swapped;
+
+            bool swapped_corrupt = _current_corrupt;
+            _current_corrupt = _hold_corrupt;
+            _hold_corrupt = swapped_corrupt;
         }
 
-        _hold_sprite = create_fruit_sprite(_hold_type, HOLD_X, HOLD_Y);
-        _current_sprite = create_fruit_sprite(_current_type, _cursor_x, SPAWN_Y);
+        _hold_sprite = create_fruit_sprite(_hold_type, HOLD_X, HOLD_Y, _hold_corrupt);
+        _current_sprite = create_fruit_sprite(_current_type, _cursor_x, SPAWN_Y, _current_corrupt);
 
         r = fruit_radius(_current_type);
         _cursor_x = bn::clamp(_cursor_x, LEFT + r, RIGHT - r);
@@ -167,11 +199,14 @@ bn::optional<scene_type> game_scene::update()
     {
         _fruits.push_back({_cursor_x, SPAWN_Y, bn::fixed(0), bn::fixed(0.5),
                            _current_type,
-                           create_fruit_sprite(_current_type, _cursor_x, SPAWN_Y)});
+                           create_fruit_sprite(_current_type, _cursor_x, SPAWN_Y, _current_corrupt),
+                           _current_corrupt});
         _current_type = _next_type;
+        _current_corrupt = _next_corrupt;
         _next_type = _random.get_int(0, SPAWN_MAX_TYPE + 1);
+        _next_corrupt = false;
         _next_sprite = create_fruit_sprite(_next_type, 96, -44);
-        _current_sprite = create_fruit_sprite(_current_type, _cursor_x, SPAWN_Y);
+        _current_sprite = create_fruit_sprite(_current_type, _cursor_x, SPAWN_Y, _current_corrupt);
         _drop_cooldown = DROP_COOLDOWN;
 
         r = fruit_radius(_current_type);
@@ -214,6 +249,44 @@ bn::optional<scene_type> game_scene::update()
         segment.set_x(_cursor_x);
         segment.set_tiles(line_frame);
         segment.set_visible(_drop_cooldown == 0);
+    }
+
+    // The single corrupted fruit animates on its own clock: frame 0 dwells for a
+    // random 3-5 s, then frames 1..3 play at the normal per-frame speed, looping.
+    if(! _corrupt_tiles.empty())
+    {
+        if(--_corrupt_timer <= 0)
+        {
+            _corrupt_frame = (_corrupt_frame + 1) % CORRUPT_FRAMES;
+            _corrupt_timer = (_corrupt_frame == 0)
+                    ? _random.get_int(CORRUPT_HOLD_MIN, CORRUPT_HOLD_MAX + 1)
+                    : CORRUPT_ANIM_SPEED;
+        }
+
+        const bn::sprite_tiles_ptr& corrupt_frame = _corrupt_tiles[_corrupt_frame];
+
+        for(fruit_t& f : _fruits)
+        {
+            if(f.corrupted)
+            {
+                f.sprite.set_tiles(corrupt_frame);
+            }
+        }
+
+        if(_current_corrupt)
+        {
+            _current_sprite.set_tiles(corrupt_frame);
+        }
+
+        if(_next_corrupt)
+        {
+            _next_sprite.set_tiles(corrupt_frame);
+        }
+
+        if(_hold_corrupt && _hold_sprite)
+        {
+            _hold_sprite->set_tiles(corrupt_frame);
+        }
     }
 
     if(is_overflowing(_fruits))

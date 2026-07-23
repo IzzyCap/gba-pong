@@ -2,6 +2,7 @@
 
 #include "bn_math.h"
 
+#include "bn_sprite_items_corrupted_fruit_0.h"
 #include "bn_sprite_items_fruit_0.h"
 #include "bn_sprite_items_fruit_1.h"
 #include "bn_sprite_items_fruit_2.h"
@@ -103,8 +104,13 @@ namespace suika
         return radii[type];
     }
 
-    bn::sprite_ptr create_fruit_sprite(int type, bn::fixed x, bn::fixed y)
+    bn::sprite_ptr create_fruit_sprite(int type, bn::fixed x, bn::fixed y, bool corrupted)
     {
+        if(type == 0 && corrupted)
+        {
+            return bn::sprite_items::corrupted_fruit_0.create_sprite(x, y);
+        }
+
         switch(type)
         {
         case 0:  return bn::sprite_items::fruit_0.create_sprite(x, y);

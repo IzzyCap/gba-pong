@@ -31,6 +31,7 @@ struct fruit_t
     bn::fixed vy;
     int type;
     bn::sprite_ptr sprite;
+    bool corrupted = false;   // true only for the single special first fruit
 };
 
 using fruit_vector = bn::vector<fruit_t, MAX_FRUITS>;
@@ -38,7 +39,10 @@ using fruit_vector = bn::vector<fruit_t, MAX_FRUITS>;
 [[nodiscard]] bn::fixed fruit_radius(int type);
 
 // Butano sprite items are separate symbols, so map a fruit type to one here.
-[[nodiscard]] bn::sprite_ptr create_fruit_sprite(int type, bn::fixed x, bn::fixed y);
+// When corrupted is true (only the special first fruit), a type-0 fruit uses the
+// animated corrupted_fruit_0 sprite instead of the normal design.
+[[nodiscard]] bn::sprite_ptr create_fruit_sprite(int type, bn::fixed x, bn::fixed y,
+                                                 bool corrupted = false);
 
 // Integrates one frame of the fruit simulation (gravity, collisions, sleeping).
 void step_physics(fruit_vector& fruits);

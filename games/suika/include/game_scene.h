@@ -39,12 +39,18 @@ private:
     int _current_type;
     int _next_type;
     int _hold_type = -1;   // -1 = nothing held yet
+    bool _current_corrupt = false;  // is the fruit in this slot the corrupted one?
+    bool _next_corrupt = false;
+    bool _hold_corrupt = false;
     bn::sprite_ptr _current_sprite;
     bn::sprite_ptr _next_sprite;
     bn::optional<bn::sprite_ptr> _hold_sprite;
     bn::vector<bn::sprite_ptr, 4> _drop_line;  // aim guide under the current fruit
     bn::vector<bn::sprite_tiles_ptr, 8> _line_tiles;  // pre-built flow-anim frames
     int _line_anim = 0;
+    bn::vector<bn::sprite_tiles_ptr, 4> _corrupt_tiles;  // corrupted_fruit_0 anim frames
+    int _corrupt_frame = 0;   // current animation frame (0..3)
+    int _corrupt_timer = 0;   // frames left before the next frame change
     bn::fixed _cursor_x = 0;
     int _drop_cooldown = 0;
     int _score = 0;
