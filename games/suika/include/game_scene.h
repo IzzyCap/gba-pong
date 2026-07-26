@@ -48,9 +48,15 @@ private:
     bn::vector<bn::sprite_ptr, 4> _drop_line;  // aim guide under the current fruit
     bn::vector<bn::sprite_tiles_ptr, 8> _line_tiles;  // pre-built flow-anim frames
     int _line_anim = 0;
-    bn::vector<bn::sprite_tiles_ptr, 4> _corrupt_tiles;  // corrupted_fruit_0 anim frames
-    int _corrupt_frame = 0;   // current animation frame (0..3)
-    int _corrupt_timer = 0;   // frames left before the next frame change
+    // Only one corrupted fruit ever exists at a time and its type only climbs as
+    // it merges, so we keep just the current corrupted type's frames resident and
+    // swap them for the next type on demand. This caps corrupted sprite VRAM at a
+    // single type's frames instead of pre-building all of them at once.
+    bn::vector<bn::sprite_tiles_ptr, CORRUPT_FRAMES> _corrupt_tiles;
+    int _loaded_corrupt_type = -1;  // type whose frames are in _corrupt_tiles, or -1
+    bool _has_corrupt = false;  // any corrupted fruit possible this run?
+    int _corrupt_frame = 0;     // current animation frame, shared by all corrupted fruits
+    int _corrupt_timer = 0;     // frames left before the next frame change
     bn::fixed _cursor_x = 0;
     int _drop_cooldown = 0;
     int _score = 0;
@@ -60,6 +66,10 @@ private:
     bool _score_saved = false;
 
     void _refresh_score();
+
+    // Makes type's corrupted frames the ones resident in VRAM, freeing whatever
+    // type was loaded before. No-op when that type is already loaded.
+    void _ensure_corrupt_tiles(int type);
 };
 
 }

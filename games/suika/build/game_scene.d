@@ -72,8 +72,7 @@ game_scene.o: /home/izzy/gba-pong/games/suika/src/game_scene.cpp \
  /home/izzy/gba-pong/butano/include/bn_regular_bg_tiles_item.h \
  /home/izzy/gba-pong/games/suika/build/bn_regular_bg_items_suika_game_zone.h \
  /home/izzy/gba-pong/games/suika/build/bn_sprite_items_drop_line.h \
- /home/izzy/gba-pong/butano/include/bn_sprite_item.h \
- /home/izzy/gba-pong/games/suika/build/bn_sprite_items_corrupted_fruit_0.h
+ /home/izzy/gba-pong/butano/include/bn_sprite_item.h
 /home/izzy/gba-pong/games/suika/include/game_scene.h:
 /home/izzy/gba-pong/butano/include/bn_random.h:
 /home/izzy/gba-pong/butano/include/bn_fixed.h:
@@ -148,4 +147,3 @@ game_scene.o: /home/izzy/gba-pong/games/suika/src/game_scene.cpp \
 /home/izzy/gba-pong/games/suika/build/bn_regular_bg_items_suika_game_zone.h:
 /home/izzy/gba-pong/games/suika/build/bn_sprite_items_drop_line.h:
 /home/izzy/gba-pong/butano/include/bn_sprite_item.h:
-/home/izzy/gba-pong/games/suika/build/bn_sprite_items_corrupted_fruit_0.h:

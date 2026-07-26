@@ -1,0 +1,1 @@
+corrupted_fruit_5_bn_gfx.o: corrupted_fruit_5_bn_gfx.s

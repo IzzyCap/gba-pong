@@ -10,7 +10,6 @@
 #include "bn_regular_bg_items_suika_bg.h"
 #include "bn_regular_bg_items_suika_game_zone.h"
 #include "bn_sprite_items_drop_line.h"
-#include "bn_sprite_items_corrupted_fruit_0.h"
 
 namespace suika
 {
@@ -32,10 +31,10 @@ namespace
     constexpr int DROP_LINE_FRAMES = 8;     // frames in drop_line.bmp (8x256)
     constexpr int DROP_LINE_ANIM_SPEED = 4; // game frames between animation steps
 
-    // Corrupted level-0 fruit animation (corrupted_fruit_0.bmp is 16x64 = 4 frames).
-    // Only the first fruit is corrupted; its first frame dwells 3-5 s, then the
-    // remaining frames play at the normal per-frame speed and the cycle repeats.
-    constexpr int CORRUPT_FRAMES = 4;       // vertical frames in corrupted_fruit_0.bmp
+    // Corrupted fruit animation timing. CORRUPT_FRAMES lives in fruit.h because the
+    // tile-building shares it. Corruption spreads as corrupted fruits merge; each
+    // corrupted fruit's first frame dwells 3-5 s, then the remaining frames play at
+    // the normal per-frame speed and the cycle repeats.
     constexpr int CORRUPT_ANIM_SPEED = 8;   // game frames per step for frames 1..3
     constexpr int CORRUPT_HOLD_MIN = 180;   // 3 s at 60 fps: frame-0 dwell (min)
     constexpr int CORRUPT_HOLD_MAX = 300;   // 5 s at 60 fps: frame-0 dwell (max)
@@ -86,15 +85,15 @@ game_scene::game_scene(bn::sprite_text_generator& text_generator) :
         _line_tiles.push_back(bn::sprite_items::drop_line.tiles_item().create_tiles(i));
     }
 
-    // Only the first fruit is corrupted (forced to level 0 above). Pre-build its
-    // animation frames once; the update loop cycles them on the corrupted fruit.
+    // The first dropped fruit is corrupted (forced to level 0 above) and corruption
+    // then rides the single merged fruit up the chain. Only one corrupted fruit
+    // ever exists, so load just its current type's frames now and swap the tiles
+    // for the next type on demand as it merges (see _ensure_corrupt_tiles).
     if(corrupted_fruits)
     {
-        for(int i = 0; i < CORRUPT_FRAMES; ++i)
-        {
-            _corrupt_tiles.push_back(
-                    bn::sprite_items::corrupted_fruit_0.tiles_item().create_tiles(i));
-        }
+        _ensure_corrupt_tiles(_current_type);
+
+        _has_corrupt = true;
 
         // Frame 0 lingers a random 3-5 s before the glitchy frames play.
         _corrupt_timer = _random.get_int(CORRUPT_HOLD_MIN, CORRUPT_HOLD_MAX + 1);
@@ -129,6 +128,23 @@ void game_scene::_refresh_score()
         _text_generator.generate(SCORE_X, SCORE_VALUE_Y, bn::to_string<16>(_score), _score_sprites);
         _last_score = _score;
     }
+}
+
+void game_scene::_ensure_corrupt_tiles(int type)
+{
+    if(type == _loaded_corrupt_type)
+    {
+        return;
+    }
+
+    // Release the previous type's frames before building the new ones so at most
+    // one corrupted type occupies sprite VRAM at any moment.
+    _corrupt_tiles.clear();
+    create_corrupted_tiles(type, _corrupt_tiles);
+
+    // Remember the type even when it has no art (empty vector) so we don't try to
+    // rebuild it every frame; animate_corrupt simply skips empty tile sets.
+    _loaded_corrupt_type = type;
 }
 
 bn::optional<scene_type> game_scene::update()
@@ -251,10 +267,45 @@ bn::optional<scene_type> game_scene::update()
         segment.set_visible(_drop_cooldown == 0);
     }
 
-    // The single corrupted fruit animates on its own clock: frame 0 dwells for a
-    // random 3-5 s, then frames 1..3 play at the normal per-frame speed, looping.
-    if(! _corrupt_tiles.empty())
+    // Corrupted fruits animate on one shared clock: frame 0 dwells for a random
+    // 3-5 s, then the remaining frames play at the normal per-frame speed,
+    // looping. Each sprite is re-tiled from its own type's frames, so corruption
+    // keeps its glitchy look as it merges up the chain (types without corrupted
+    // art yet simply show the normal design while still carrying the corrupted
+    // flag; single-frame types like corrupted_fruit_1 just stay static).
+    if(_has_corrupt)
     {
+        // Exactly one corrupted fruit exists at a time (it rides the merged fruit
+        // up the chain), so find its current type and make sure that type's frames
+        // are the ones resident in VRAM before animating. This swaps the tiles in
+        // the moment a merge bumps the corrupted fruit to a bigger type.
+        int corrupt_type = -1;
+
+        if(_current_corrupt)
+        {
+            corrupt_type = _current_type;
+        }
+        else if(_hold_corrupt)
+        {
+            corrupt_type = _hold_type;
+        }
+        else
+        {
+            for(const fruit_t& f : _fruits)
+            {
+                if(f.corrupted)
+                {
+                    corrupt_type = f.type;
+                    break;
+                }
+            }
+        }
+
+        if(corrupt_type >= 0)
+        {
+            _ensure_corrupt_tiles(corrupt_type);
+        }
+
         if(--_corrupt_timer <= 0)
         {
             _corrupt_frame = (_corrupt_frame + 1) % CORRUPT_FRAMES;
@@ -263,29 +314,29 @@ bn::optional<scene_type> game_scene::update()
                     : CORRUPT_ANIM_SPEED;
         }
 
-        const bn::sprite_tiles_ptr& corrupt_frame = _corrupt_tiles[_corrupt_frame];
+        auto animate_corrupt = [this](bn::sprite_ptr& sprite, int type, bool corrupt)
+        {
+            // Only the single loaded corrupted type has resident frames; clamp to
+            // its own frame count so single-frame corrupted fruits (e.g.
+            // corrupted_fruit_1) stay on frame 0 instead of indexing past them.
+            if(corrupt && type == _loaded_corrupt_type && ! _corrupt_tiles.empty())
+            {
+                int frame = _corrupt_frame % _corrupt_tiles.size();
+                sprite.set_tiles(_corrupt_tiles[frame]);
+            }
+        };
 
         for(fruit_t& f : _fruits)
         {
-            if(f.corrupted)
-            {
-                f.sprite.set_tiles(corrupt_frame);
-            }
+            animate_corrupt(f.sprite, f.type, f.corrupted);
         }
 
-        if(_current_corrupt)
-        {
-            _current_sprite.set_tiles(corrupt_frame);
-        }
+        animate_corrupt(_current_sprite, _current_type, _current_corrupt);
+        animate_corrupt(_next_sprite, _next_type, _next_corrupt);
 
-        if(_next_corrupt)
+        if(_hold_sprite)
         {
-            _next_sprite.set_tiles(corrupt_frame);
-        }
-
-        if(_hold_corrupt && _hold_sprite)
-        {
-            _hold_sprite->set_tiles(corrupt_frame);
+            animate_corrupt(*_hold_sprite, _hold_type, _hold_corrupt);
         }
     }
 

@@ -1,8 +1,18 @@
 #include "fruit.h"
 
 #include "bn_math.h"
+#include "bn_algorithm.h"
 
 #include "bn_sprite_items_corrupted_fruit_0.h"
+#include "bn_sprite_items_corrupted_fruit_1.h"
+#include "bn_sprite_items_corrupted_fruit_2.h"
+#include "bn_sprite_items_corrupted_fruit_3.h"
+#include "bn_sprite_items_corrupted_fruit_4.h"
+#include "bn_sprite_items_corrupted_fruit_5.h"
+#include "bn_sprite_items_corrupted_fruit_6.h"
+#include "bn_sprite_items_corrupted_fruit_7.h"
+#include "bn_sprite_items_corrupted_fruit_8.h"
+#include "bn_sprite_items_corrupted_fruit_9.h"
 #include "bn_sprite_items_fruit_0.h"
 #include "bn_sprite_items_fruit_1.h"
 #include "bn_sprite_items_fruit_2.h"
@@ -13,7 +23,6 @@
 #include "bn_sprite_items_fruit_7.h"
 #include "bn_sprite_items_fruit_8.h"
 #include "bn_sprite_items_fruit_9.h"
-#include "bn_sprite_items_fruit_10.h"
 
 namespace suika
 {
@@ -21,7 +30,7 @@ namespace suika
     {
         // Play area / physics tuning kept private to the simulation.
         constexpr bn::fixed FLOOR = 70;
-        constexpr bn::fixed DANGER_Y = -52;
+        constexpr bn::fixed DANGER_Y = -45;
 
         constexpr bn::fixed GRAVITY = 0.30;
         constexpr bn::fixed MAX_FALL = 5;
@@ -92,13 +101,35 @@ namespace suika
 
             fruits.pop_back();
         }
+
+        // Central corrupted-fruit lookup: maps a fruit type to its animated
+        // corrupted_fruit_<type> sprite item, or nullptr for types that have no
+        // corrupted art yet. Add a case (and the matching include above) as new
+        // corrupted designs are created, then bump CORRUPTED_TYPES in fruit.h.
+        const bn::sprite_item* corrupted_sprite_item(int type)
+        {
+            switch(type)
+            {
+            case 0:  return &bn::sprite_items::corrupted_fruit_0;
+            case 1:  return &bn::sprite_items::corrupted_fruit_1;
+            case 2:  return &bn::sprite_items::corrupted_fruit_2;
+            case 3:  return &bn::sprite_items::corrupted_fruit_3;
+            case 4:  return &bn::sprite_items::corrupted_fruit_4;
+            case 5:  return &bn::sprite_items::corrupted_fruit_5;
+            case 6:  return &bn::sprite_items::corrupted_fruit_6;
+            case 7:  return &bn::sprite_items::corrupted_fruit_7;
+            case 8:  return &bn::sprite_items::corrupted_fruit_8;
+            case 9:  return &bn::sprite_items::corrupted_fruit_9;
+            default: return nullptr;
+            }
+        }
     }
 
     bn::fixed fruit_radius(int type)
     {
         static const bn::fixed radii[MAX_TYPE + 1] =
         {
-            4, 7, 7, 10, 11, 17, 18, 18, 21, 28, 30
+            4, 7, 7, 10, 11, 17, 18, 18, 28, 30
         };
 
         return radii[type];
@@ -106,9 +137,12 @@ namespace suika
 
     bn::sprite_ptr create_fruit_sprite(int type, bn::fixed x, bn::fixed y, bool corrupted)
     {
-        if(type == 0 && corrupted)
+        if(corrupted)
         {
-            return bn::sprite_items::corrupted_fruit_0.create_sprite(x, y);
+            if(const bn::sprite_item* item = corrupted_sprite_item(type))
+            {
+                return item->create_sprite(x, y);
+            }
         }
 
         switch(type)
@@ -122,8 +156,31 @@ namespace suika
         case 6:  return bn::sprite_items::fruit_6.create_sprite(x, y);
         case 7:  return bn::sprite_items::fruit_7.create_sprite(x, y);
         case 8:  return bn::sprite_items::fruit_8.create_sprite(x, y);
-        case 9:  return bn::sprite_items::fruit_9.create_sprite(x, y);
-        default: return bn::sprite_items::fruit_10.create_sprite(x, y);
+        default: return bn::sprite_items::fruit_9.create_sprite(x, y);
+        }
+    }
+
+    bool type_has_corrupted(int type)
+    {
+        return corrupted_sprite_item(type) != nullptr;
+    }
+
+    void create_corrupted_tiles(int type,
+                                bn::vector<bn::sprite_tiles_ptr, CORRUPT_FRAMES>& out)
+    {
+        out.clear();
+
+        if(const bn::sprite_item* item = corrupted_sprite_item(type))
+        {
+            // Build only the frames this sprite actually has: most corrupted
+            // fruits animate over CORRUPT_FRAMES frames, but some (e.g.
+            // corrupted_fruit_1) ship a single frame and simply stay static.
+            int frames = bn::min(item->tiles_item().graphics_count(), int(CORRUPT_FRAMES));
+
+            for(int i = 0; i < frames; ++i)
+            {
+                out.push_back(item->tiles_item().create_tiles(i));
+            }
         }
     }
 
@@ -232,6 +289,9 @@ namespace suika
                     if(d2 <= rr * rr + 2)
                     {
                         int type = a.type;
+                        // Corruption spreads: the merged fruit is corrupted if
+                        // either of its parents was.
+                        bool corrupt = a.corrupted || b.corrupted;
                         bn::fixed nx = (a.x + b.x) / 2;
                         bn::fixed ny = (a.y + b.y) / 2;
                         bn::fixed nvx = (a.vx + b.vx) / 2;
@@ -244,7 +304,8 @@ namespace suika
                         {
                             int nt = type + 1;
                             fruits.push_back({nx, ny, nvx, nvy, nt,
-                                            create_fruit_sprite(nt, nx, ny)});
+                                            create_fruit_sprite(nt, nx, ny, corrupt),
+                                            corrupt});
                             score += nt;
                         }
                         else
