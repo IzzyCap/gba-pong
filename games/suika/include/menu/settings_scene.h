@@ -58,6 +58,12 @@ private:
     void _refresh_dev_tools();
     void _refresh_player1_dialog();
 
+    // Draws one "<Label>: On/Off" Developer Tools toggle row centered at y. When
+    // on, the label is grayed (disabled/locked) and the value drawn green;
+    // otherwise the label is normal and the value red. selected adds the "> <"
+    // brackets.
+    void _draw_dev_toggle(bn::fixed y, bool selected, const char* label, bool on);
+
     // Feeds this frame's input to the unlock combo state machine.
     // Returns 0 if input is free for normal handling, 1 if a combo key was
     // consumed this frame, 2 if the combo was just completed.

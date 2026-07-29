@@ -26,17 +26,18 @@ namespace
     constexpr int ADMIN_OPTION_BACK = 3;
     constexpr bn::fixed ADMIN_MENU_START_Y = -33;
 
-    // Developer Tools menu options (only the first is enabled).
+    // Developer Tools menu options.
     constexpr int DEV_OPTION_COUNT = 4;
     constexpr int DEV_OPTION_CORRUPTED = 0;
+    constexpr int DEV_OPTION_BOUNCING = 1;   // unlocked once STORY_CORRUPTED_FRUITS_DONE is reached
 
     // Developer Tools stay locked (grayed, not enterable) until the player has
-    // read Player 1's first message, which moves the story to STORY_P1_WARNING.
+    // read Player 1's first message, which moves the story to STORY_CORRUPTED_FRUITS.
     // After that they're unlocked forever, since story progress only moves
     // forward and is persisted to SRAM.
     bool dev_tools_unlocked()
     {
-        return story_progress >= STORY_P1_WARNING;
+        return story_progress >= STORY_CORRUPTED_FRUITS;
     }
 
     // Selectable entries on the System Status screen.
@@ -363,62 +364,70 @@ void settings_scene::_refresh_logs()
     }
 }
 
+void settings_scene::_draw_dev_toggle(bn::fixed y, bool selected, const char* label, bool on)
+{
+    // Draw "<label>" and its On/Off value as separate segments laid out
+    // left-aligned from an X that keeps the whole line centered. While still
+    // toggleable the label is normal and the "Off" value red; once activated the
+    // option is locked (label grayed as disabled) but the "On" value stays green.
+    const char* prefix = selected ? "> " : "";
+    const char* value = on ? "On" : "Off";
+    const char* suffix = selected ? " <" : "";
+
+    const int prefix_w = _text_generator.width(prefix);
+    const int label_w = _text_generator.width(label);
+    const int value_w = _text_generator.width(value);
+    const int suffix_w = _text_generator.width(suffix);
+    const int total_w = prefix_w + label_w + value_w + suffix_w;
+
+    bn::sprite_palette_item normal_palette = _text_generator.palette_item();
+    const bn::sprite_palette_item& label_palette = on ? GRAY_PALETTE_ITEM : normal_palette;
+    const bn::sprite_palette_item& value_palette = on ? GREEN_PALETTE_ITEM : RED_PALETTE_ITEM;
+
+    _text_generator.set_left_alignment();
+    bn::fixed x = bn::fixed(-total_w) / 2;
+
+    _text_generator.set_palette_item(label_palette);
+    _text_generator.generate(x, y, prefix, _option_sprites);
+    x += prefix_w;
+    _text_generator.generate(x, y, label, _option_sprites);
+    x += label_w;
+
+    _text_generator.set_palette_item(value_palette);
+    _text_generator.generate(x, y, value, _option_sprites);
+    x += value_w;
+
+    _text_generator.set_palette_item(label_palette);
+    _text_generator.generate(x, y, suffix, _option_sprites);
+
+    _text_generator.set_palette_item(normal_palette);
+    _text_generator.set_center_alignment();
+}
+
 void settings_scene::_refresh_dev_tools()
 {
     bn::fixed y = ADMIN_MENU_START_Y;
 
     for(int i = 0; i < DEV_OPTION_COUNT; ++i)
     {
+        const bool selected = (i == _dev_selected);
+
         if(i == DEV_OPTION_CORRUPTED)
         {
-            // Draw "Corrupted Fruits: " and its value as separate segments laid
-            // out left-aligned from an X that keeps the whole line centered.
-            // While still toggleable the label is normal and the "Off" value is
-            // red; once activated the option is locked (label grayed as disabled)
-            // but the "On" value stays green.
-            const bool selected = (i == _dev_selected);
-            const char* prefix = selected ? "> " : "";
-            const char* label = "Corrupted Fruits: ";
-            const char* value = corrupted_fruits ? "On" : "Off";
-            const char* suffix = selected ? " <" : "";
-
-            const int prefix_w = _text_generator.width(prefix);
-            const int label_w = _text_generator.width(label);
-            const int value_w = _text_generator.width(value);
-            const int suffix_w = _text_generator.width(suffix);
-            const int total_w = prefix_w + label_w + value_w + suffix_w;
-
-            bn::sprite_palette_item normal_palette = _text_generator.palette_item();
-            const bn::sprite_palette_item& label_palette =
-                    corrupted_fruits ? GRAY_PALETTE_ITEM : normal_palette;
-            const bn::sprite_palette_item& value_palette =
-                    corrupted_fruits ? GREEN_PALETTE_ITEM : RED_PALETTE_ITEM;
-
-            _text_generator.set_left_alignment();
-            bn::fixed x = bn::fixed(-total_w) / 2;
-
-            _text_generator.set_palette_item(label_palette);
-            _text_generator.generate(x, y, prefix, _option_sprites);
-            x += prefix_w;
-            _text_generator.generate(x, y, label, _option_sprites);
-            x += label_w;
-
-            _text_generator.set_palette_item(value_palette);
-            _text_generator.generate(x, y, value, _option_sprites);
-            x += value_w;
-
-            _text_generator.set_palette_item(label_palette);
-            _text_generator.generate(x, y, suffix, _option_sprites);
-
-            _text_generator.set_palette_item(normal_palette);
-            _text_generator.set_center_alignment();
+            _draw_dev_toggle(y, selected, "Corrupted Fruits: ", corrupted_fruits);
+        }
+        else if(i == DEV_OPTION_BOUNCING && story_progress >= STORY_CORRUPTED_FRUITS_DONE)
+        {
+            // Bouncing Fruits only reveals itself once the corrupted-fruits story
+            // beat is done; before that it stays a "?????" placeholder below.
+            _draw_dev_toggle(y, selected, "Bouncing Fruits: ", bouncing_fruits);
         }
         else
         {
             // "?????" placeholders are always disabled and drawn grayed out.
             bn::string<40> text = "?????";
 
-            if(i == _dev_selected)
+            if(selected)
             {
                 text = bn::string<40>("> ") + text + " <";
             }
@@ -693,7 +702,7 @@ bn::optional<scene_type> settings_scene::_update_player1_dialog()
         if(_player1_dialog.done() && ! _player1_dialog.has_next_page() &&
            story_progress == STORY_P1_INTRO)
         {
-            story_set_progress(STORY_P1_WARNING);
+            story_set_progress(STORY_CORRUPTED_FRUITS);
         }
 
         _player1_dialog.set_text("");   // clear the conversation sprites
@@ -744,6 +753,23 @@ bn::optional<scene_type> settings_scene::_update_dev_tools()
 
             dev_tools_pending = true;
             return scene_type::creepy_admin;
+        }
+        else if(_dev_selected == DEV_OPTION_BOUNCING &&
+                story_progress >= STORY_CORRUPTED_FRUITS_DONE && ! bouncing_fruits)
+        {
+            // Activating Bouncing Fruits is permanent: from now on every fruit
+            // (and every merge shove) rebounds twice as hard. Lock it On and move
+            // the story on. It persists through STORY_BOUNCING_FRUITS (re-derived
+            // on boot), so there's no separate settings save here.
+            bouncing_fruits = true;
+
+            if(story_progress < STORY_BOUNCING_FRUITS)
+            {
+                story_set_progress(STORY_BOUNCING_FRUITS);
+            }
+
+            _refresh_options();
+            return bn::nullopt;
         }
         // The other options (and the already-activated toggle) are disabled.
     }

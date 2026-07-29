@@ -49,6 +49,10 @@ menu_scene.o: /home/izzy/gba-pong/games/suika/src/menu/menu_scene.cpp \
  /home/izzy/gba-pong/games/suika/include/scene.h \
  /home/izzy/gba-pong/butano/include/bn_optional.h \
  /home/izzy/gba-pong/butano/include/bn_keypad.h \
+ /home/izzy/gba-pong/games/suika/include/story.h \
+ /home/izzy/gba-pong/butano/include/bn_sram.h \
+ /home/izzy/gba-pong/butano/include/../hw/include/bn_hw_sram_constants.h \
+ /home/izzy/gba-pong/butano/include/bn_common.h \
  /home/izzy/gba-pong/games/suika/build/bn_regular_bg_items_suika_bg.h \
  /home/izzy/gba-pong/butano/include/bn_regular_bg_item.h \
  /home/izzy/gba-pong/butano/include/bn_bg_palette_item.h \
@@ -107,6 +111,10 @@ menu_scene.o: /home/izzy/gba-pong/games/suika/src/menu/menu_scene.cpp \
 /home/izzy/gba-pong/games/suika/include/scene.h:
 /home/izzy/gba-pong/butano/include/bn_optional.h:
 /home/izzy/gba-pong/butano/include/bn_keypad.h:
+/home/izzy/gba-pong/games/suika/include/story.h:
+/home/izzy/gba-pong/butano/include/bn_sram.h:
+/home/izzy/gba-pong/butano/include/../hw/include/bn_hw_sram_constants.h:
+/home/izzy/gba-pong/butano/include/bn_common.h:
 /home/izzy/gba-pong/games/suika/build/bn_regular_bg_items_suika_bg.h:
 /home/izzy/gba-pong/butano/include/bn_regular_bg_item.h:
 /home/izzy/gba-pong/butano/include/bn_bg_palette_item.h:

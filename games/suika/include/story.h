@@ -18,8 +18,9 @@ enum story_stage
 {
     STORY_START = 0,        // first, tentative contact with Player 1
     STORY_P1_INTRO,         // Player 1 has introduced themselves
-    STORY_P1_WARNING,
     STORY_CORRUPTED_FRUITS, // the player activated the Corrupted Fruits dev tool
+    STORY_CORRUPTED_FRUITS_DONE, // merged a corrupted_fruit_8 with a fruit_8 for the first time
+    STORY_BOUNCING_FRUITS,  // the player activated the Bouncing Fruits dev tool (fruits bounce twice as hard)
     STORY_ENDING,             // the story has reached its final beat (no more content)
 };
 
@@ -36,7 +37,7 @@ struct story_save_data
     int progress;
 };
 
-inline constexpr char STORY_SAVE_MAGIC[4] = { 'S', 'T', 'R', 'Y' };
+inline constexpr char STORY_SAVE_MAGIC[4] = { 'S', 'T', 'R', '2' };
 
 inline constexpr int STORY_SAVE_OFFSET = 128;
 

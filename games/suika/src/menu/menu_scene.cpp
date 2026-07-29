@@ -2,6 +2,8 @@
 
 #include "bn_keypad.h"
 
+#include "story.h"
+
 #include "bn_regular_bg_items_suika_bg.h"
 
 namespace suika
@@ -43,7 +45,15 @@ bn::optional<scene_type> menu_scene::update()
 
     if(bn::keypad::a_pressed() || bn::keypad::start_pressed())
     {
-        return _selected == 0 ? scene_type::game : scene_type::settings;
+        if(_selected == 1)
+        {
+            return scene_type::settings;
+        }
+
+        // Start normally launches a game, but once the player has reached the
+        // "corrupted fruit done" beat it opens the Beepboy event instead.
+        return story_progress == STORY_CORRUPTED_FRUITS_DONE
+                ? scene_type::beepboy : scene_type::game;
     }
 
     return bn::nullopt;

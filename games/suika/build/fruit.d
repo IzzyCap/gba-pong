@@ -37,6 +37,10 @@ fruit.o: /home/izzy/gba-pong/games/suika/src/fruit.cpp \
  /home/izzy/gba-pong/butano/include/bn_reciprocal_lut.h \
  /home/izzy/gba-pong/butano/include/bn_rule_of_three_approximation.h \
  /home/izzy/gba-pong/butano/include/bn_algorithm.h \
+ /home/izzy/gba-pong/games/suika/include/menu/settings.h \
+ /home/izzy/gba-pong/butano/include/bn_sram.h \
+ /home/izzy/gba-pong/butano/include/../hw/include/bn_hw_sram_constants.h \
+ /home/izzy/gba-pong/butano/include/bn_common.h \
  /home/izzy/gba-pong/games/suika/build/bn_sprite_items_corrupted_fruit_0.h \
  /home/izzy/gba-pong/butano/include/bn_sprite_item.h \
  /home/izzy/gba-pong/butano/include/bn_sprite_shape_size.h \
@@ -103,6 +107,10 @@ fruit.o: /home/izzy/gba-pong/games/suika/src/fruit.cpp \
 /home/izzy/gba-pong/butano/include/bn_reciprocal_lut.h:
 /home/izzy/gba-pong/butano/include/bn_rule_of_three_approximation.h:
 /home/izzy/gba-pong/butano/include/bn_algorithm.h:
+/home/izzy/gba-pong/games/suika/include/menu/settings.h:
+/home/izzy/gba-pong/butano/include/bn_sram.h:
+/home/izzy/gba-pong/butano/include/../hw/include/bn_hw_sram_constants.h:
+/home/izzy/gba-pong/butano/include/bn_common.h:
 /home/izzy/gba-pong/games/suika/build/bn_sprite_items_corrupted_fruit_0.h:
 /home/izzy/gba-pong/butano/include/bn_sprite_item.h:
 /home/izzy/gba-pong/butano/include/bn_sprite_shape_size.h:

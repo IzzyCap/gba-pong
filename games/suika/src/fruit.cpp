@@ -3,6 +3,8 @@
 #include "bn_math.h"
 #include "bn_algorithm.h"
 
+#include "settings.h"
+
 #include "bn_sprite_items_corrupted_fruit_0.h"
 #include "bn_sprite_items_corrupted_fruit_1.h"
 #include "bn_sprite_items_corrupted_fruit_2.h"
@@ -45,6 +47,40 @@ namespace suika
         constexpr bn::fixed REST_MIN_SPEED = 1;        // min approach speed for a real bounce
         constexpr bn::fixed REST_EPS = 0.15;           // below this speed a fruit is snapped to rest
 
+        // Merge "explosion": a merge shoves the surrounding fruits outward a little.
+        // The impulse falls off linearly from MERGE_PUSH_FORCE at the blast centre
+        // to zero at the edge, and the blast reaches MERGE_PUSH_RADIUS_K times the
+        // merged fruit's radius (so bigger merges shove harder and wider).
+        constexpr bn::fixed MERGE_PUSH_FORCE = 10;
+        constexpr bn::fixed MERGE_PUSH_RADIUS_K = 3;
+
+        // The "Bouncing Fruits" developer tool (unlocked late in the story)
+        // boosts how hard fruits rebound off the walls and each other, and how
+        // hard a merge shoves its neighbours. These accessors fold that toggle in
+        // so the rest of the physics just reads the effective value.
+        constexpr bn::fixed BOUNCE_BOOST = 1.4;
+
+        // Even when boosted, a rebound is capped just under 1 so it always loses a
+        // little energy. Without this the boosted restitution climbs above 1
+        // (0.8 * 1.4 = 1.12), so each bounce would *gain* energy and the fruits
+        // would never come to rest.
+        constexpr bn::fixed MAX_REST = 0.95;
+
+        bn::fixed wall_rest()
+        {
+            return bouncing_fruits ? bn::min(WALL_REST * BOUNCE_BOOST, MAX_REST) : WALL_REST;
+        }
+
+        bn::fixed fruit_rest()
+        {
+            return bouncing_fruits ? bn::min(FRUIT_REST * BOUNCE_BOOST, MAX_REST) : FRUIT_REST;
+        }
+
+        bn::fixed merge_push_force()
+        {
+            return bouncing_fruits ? MERGE_PUSH_FORCE * BOUNCE_BOOST : MERGE_PUSH_FORCE;
+        }
+
         void clamp_to_walls(fruit_t& f)
         {
             bn::fixed r = fruit_radius(f.type);
@@ -55,7 +91,7 @@ namespace suika
 
                 if(f.vx < 0)
                 {
-                    f.vx = -f.vx * WALL_REST;
+                    f.vx = -f.vx * wall_rest();
                 }
             }
             else if(f.x > RIGHT - r)
@@ -64,7 +100,7 @@ namespace suika
 
                 if(f.vx > 0)
                 {
-                    f.vx = -f.vx * WALL_REST;
+                    f.vx = -f.vx * wall_rest();
                 }
             }
 
@@ -77,7 +113,7 @@ namespace suika
                     // Only bounce if moving fast enough, otherwise just stop
                     if(f.vy > 1)
                     {
-                        f.vy = -f.vy * WALL_REST;
+                        f.vy = -f.vy * wall_rest();
                     }
                     else
                     {
@@ -100,6 +136,31 @@ namespace suika
             }
 
             fruits.pop_back();
+        }
+
+        // Pushes every fruit within blast_radius of (cx, cy) radially outward, with
+        // the impulse fading from force at the centre to zero at the edge. Called
+        // on a merge so the pop nudges its neighbours instead of the pile sitting
+        // perfectly still.
+        void apply_merge_explosion(fruit_vector& fruits, bn::fixed cx, bn::fixed cy,
+                                   bn::fixed blast_radius, bn::fixed force)
+        {
+            bn::fixed r2 = blast_radius * blast_radius;
+
+            for(fruit_t& f : fruits)
+            {
+                bn::fixed dx = f.x - cx;
+                bn::fixed dy = f.y - cy;
+                bn::fixed d2 = dx * dx + dy * dy;
+
+                if(d2 > bn::fixed(0.01) && d2 < r2)
+                {
+                    bn::fixed d = bn::sqrt(d2);
+                    bn::fixed imp = force * (1 - d / blast_radius);  // 1 at centre -> 0 at edge
+                    f.vx += (dx / d) * imp;
+                    f.vy += (dy / d) * imp;
+                }
+            }
         }
 
         // Central corrupted-fruit lookup: maps a fruit type to its animated
@@ -203,7 +264,10 @@ namespace suika
                 f.vy = MAX_FALL;
             }
 
+            // Air resistance on both axes so bounce energy bleeds off over time
+            // and fruits eventually settle instead of bouncing indefinitely.
             f.vx *= AIR_DAMP;
+            f.vy *= AIR_DAMP;
             f.x += f.vx;
             f.y += f.vy;
             clamp_to_walls(f);
@@ -250,7 +314,7 @@ namespace suika
                         {
                             // Bounce only on fast impacts; slow contacts are inelastic
                             // so resting stacks don't jiggle.
-                            bn::fixed rest = (vn < -REST_MIN_SPEED) ? FRUIT_REST : bn::fixed(0);
+                            bn::fixed rest = (vn < -REST_MIN_SPEED) ? fruit_rest() : bn::fixed(0);
                             bn::fixed imp = -(1 + rest) * vn / 2;
                             a.vx -= imp * nx;
                             a.vy -= imp * ny;
@@ -268,7 +332,8 @@ namespace suika
         }
     }
 
-    bool try_merge(fruit_vector& fruits, int& score)
+    bool try_merge(fruit_vector& fruits, int& score, bool& corrupt_story_merge,
+                   bn::fixed& merge_x, bn::fixed& merge_y)
     {
         int n = fruits.size();
 
@@ -292,13 +357,33 @@ namespace suika
                         // Corruption spreads: the merged fruit is corrupted if
                         // either of its parents was.
                         bool corrupt = a.corrupted || b.corrupted;
+
+                        // A corrupted fruit combining with a normal fruit of the
+                        // trigger type is a story beat; report it (never clear it)
+                        // so the caller can react.
+                        if(type == CORRUPT_STORY_MERGE_TYPE && corrupt)
+                        {
+                            corrupt_story_merge = true;
+                        }
+
                         bn::fixed nx = (a.x + b.x) / 2;
                         bn::fixed ny = (a.y + b.y) / 2;
                         bn::fixed nvx = (a.vx + b.vx) / 2;
                         bn::fixed nvy = (a.vy + b.vy) / 2;
 
+                        merge_x = nx;
+                        merge_y = ny;
+
                         remove_fruit(fruits, j);  // j > i, so remove it first
                         remove_fruit(fruits, i);
+
+                        // Shove the surrounding fruits outward from the pop. The
+                        // blast scales with the fruit the merge produced (the
+                        // biggest fruit for a top-pair pop).
+                        int merged_type = (type < MAX_TYPE) ? type + 1 : MAX_TYPE;
+                        apply_merge_explosion(fruits, nx, ny,
+                                              fruit_radius(merged_type) * MERGE_PUSH_RADIUS_K,
+                                              merge_push_force());
 
                         if(type < MAX_TYPE)
                         {

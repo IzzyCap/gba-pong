@@ -26,16 +26,39 @@ namespace suika
         "play the Suika Game and\n"
         "try to merge corrupted fruits.\f";
 
+    // Placeholder for Player 1's line after the corrupted_fruit_8 + fruit_8
+    // story beat (replace with the real script later). Pages split with '\f'.
+    inline const char* const P1_CORRUPTED_DONE =
+        "you did it...\n"
+        "the corruption is loose.\f"
+        "Now you can activate\n"
+        "the second game modifier\f";
+
+    // Placeholder for Beepboy's corrupted-event dialogue (replace with the real
+    // script later). Pages are split with '\f'.
+    inline const char* const BEEPBOY_PLACEHOLDER =
+        "h e l l o . . .\n"
+        "you came back to me.\f"
+        "the fruits are mine now.\n"
+        "and soon, so are you.\f"
+        "01001000 01001001";
+
+    // Beepboy's line for the corrupted event (placeholder for now).
+    [[nodiscard]] inline const char* beepboy()
+    {
+        return BEEPBOY_PLACEHOLDER;
+    }
+
     // Which line Player 1 says at each story stage, indexed by story_progress.
     // Point several stages at the SAME constant to repeat a line -- e.g. the
-    // intro plays at both STORY_P1_INTRO and STORY_P1_WARNING below. Keep one
+    // intro plays at both STORY_P1_INTRO and STORY_CORRUPTED_FRUITS below. Keep one
     // entry per reachable stage, in enum order (STORY_START .. the last stage
     // before STORY_ENDING).
     inline const char* const PLAYER1_BY_STAGE[] = {
         /* STORY_START            */ P1_INTRO,
         /* STORY_P1_INTRO         */ P1_INTRO,
-        /* STORY_P1_WARNING       */ P1_INTRO,
-        /* STORY_CORRUPTED_FRUITS */ P1_RETURN
+        /* STORY_CORRUPTED_FRUITS */ P1_RETURN,
+        /* STORY_CORRUPTED_FRUITS_DONE */ P1_CORRUPTED_DONE
     };
 
     inline constexpr int PLAYER1_STAGE_COUNT =

@@ -2,13 +2,16 @@
 
 #include "bn_keypad.h"
 #include "bn_string.h"
+#include "bn_blending.h"
 #include "bn_algorithm.h"
 
 #include "high_scores.h"
 #include "settings.h"
+#include "story.h"
 
 #include "bn_regular_bg_items_suika_bg.h"
 #include "bn_regular_bg_items_suika_game_zone.h"
+#include "bn_regular_bg_items_beepboy.h"
 #include "bn_sprite_items_drop_line.h"
 
 namespace suika
@@ -25,6 +28,11 @@ namespace
     constexpr bn::fixed HOLD_X = -96;
     constexpr bn::fixed HOLD_Y = 34;
     constexpr bn::fixed HOLD_LABEL_Y = 12;
+
+    // A super-short pause between merges so that when several are pending at once
+    // (chain reactions), the player sees them resolve one at a time instead of
+    // all popping on the same frame.
+    constexpr int MERGE_COOLDOWN = 12;
 
     // Drop guide line: four stacked 8x32 segments spanning the jar interior.
     constexpr bn::fixed DROP_LINE_Y[] = {-48, -16, 16, 48};
@@ -45,6 +53,17 @@ namespace
     constexpr bn::fixed RANK_FIRST_Y = 49;
     constexpr bn::fixed RANK_LINE_H = 12;
     constexpr int RANK_COUNT = 3;
+
+    // Combo: a merge landed within COMBO_WINDOW frames of the previous one
+    // extends the combo; letting the window lapse ends it (the next merge starts
+    // back at x1). This is the invisible "cooldown" the player races against.
+    constexpr int COMBO_WINDOW = 60;             // ~0.75 s at 60 fps to chain again
+
+    // Combo readout: a popup centred on the merge that rises slowly while it fades
+    // out, independent of (and quicker than) the chain window.
+    constexpr int COMBO_POPUP_LIFE = 30;         // ~0.5 s to fade out
+    constexpr bn::fixed COMBO_RISE = 12;         // pixels the popup drifts up over its life
+    constexpr int COMBO_UI_PRIORITY = 1;         // draw the readout in front of fruits (pr 3)
 }
 
 game_scene::game_scene(bn::sprite_text_generator& text_generator) :
@@ -64,8 +83,24 @@ game_scene::game_scene(bn::sprite_text_generator& text_generator) :
     // aim guide and text -- still renders in front of them.
     _bg.set_priority(3);
     _game_zone_bg.set_priority(3);
-    _bg.set_z_order(1);            // higher z order = drawn first (further back)
     _game_zone_bg.set_z_order(0);  // lower z order = drawn over the backdrop
+
+    // Once the "corrupted fruit_8" story beat is reached (persisted in SRAM),
+    // beepboy hides between the jar-room backdrop (suika_bg) and the jar
+    // (suika_game_zone). Pushing suika_bg one z order further back leaves room
+    // for beepboy in the middle. Both share the sprites' backmost priority (3),
+    // so every sprite still renders in front.
+    if(story_progress >= STORY_CORRUPTED_FRUITS_DONE)
+    {
+        _beepboy_bg = bn::regular_bg_items::beepboy.create_bg(0, 0);
+        _beepboy_bg->set_priority(3);
+        _beepboy_bg->set_z_order(1);  // between suika_bg (back) and the jar (front)
+        _bg.set_z_order(2);           // furthest back, behind beepboy
+    }
+    else
+    {
+        _bg.set_z_order(1);  // higher z order = drawn first (further back)
+    }
 
     // Aim guide: stacked segments that follow the cursor. They share the fruits'
     // background priority (3) but use a higher z order, so the fruits (z order 0)
@@ -145,6 +180,96 @@ void game_scene::_ensure_corrupt_tiles(int type)
     // Remember the type even when it has no art (empty vector) so we don't try to
     // rebuild it every frame; animate_corrupt simply skips empty tile sets.
     _loaded_corrupt_type = type;
+}
+
+void game_scene::_register_combo_merge(int points, bn::fixed x, bn::fixed y)
+{
+    // A merge landing while the previous window is still open extends the combo;
+    // otherwise it starts a fresh one at x1.
+    _combo_count = (_combo_timer > 0) ? _combo_count + 1 : 1;
+    _combo_timer = COMBO_WINDOW;
+    _combo_x = x;
+    _combo_y = y;
+
+    // Apply the combo multiplier: this merge is worth its base points times the
+    // current multiplier. try_merge already added the base points, so top up the
+    // score with the extra (multiplier - 1) copies here.
+    _score += points * (_combo_count - 1);
+
+    // The popup only shows once a real combo forms: the second merge onward
+    // (x1 is a lone merge, so it stays silent).
+    if(_combo_count >= 2)
+    {
+        _combo_life = COMBO_POPUP_LIFE;
+        _refresh_combo_text(points);
+    }
+}
+
+void game_scene::_refresh_combo_text(int points)
+{
+    _combo_sprites.clear();
+
+    // "<points> x<multiplier>", e.g. "20 x5": the points this merge scored and
+    // the current combo multiplier.
+    bn::string<16> text = bn::to_string<8>(points) + " x" + bn::to_string<6>(_combo_count);
+
+    // Centred on the merge, then blended so the shared transparency weight can
+    // fade it out little by little as it rises.
+    _text_generator.set_center_alignment();
+    _text_generator.generate(_combo_x, _combo_y, text, _combo_sprites);
+
+    for(bn::sprite_ptr& sprite : _combo_sprites)
+    {
+        sprite.set_bg_priority(COMBO_UI_PRIORITY);
+        sprite.set_blending_enabled(true);
+    }
+
+    // A fresh popup starts fully opaque again.
+    bn::blending::set_transparency_alpha(1);
+}
+
+void game_scene::_update_combo()
+{
+    // Chain window: once it lapses, the next merge starts a fresh x1 combo.
+    if(_combo_timer > 0)
+    {
+        --_combo_timer;
+    }
+
+    // Popup: drifts slowly upward while fading out, then clears itself. It is
+    // quicker than the chain window, so it vanishes well before the combo does.
+    if(_combo_life > 0)
+    {
+        --_combo_life;
+
+        bn::fixed t = bn::fixed(_combo_life) / COMBO_POPUP_LIFE;  // 1 -> 0
+        bn::blending::set_transparency_alpha(t);                  // fade out
+
+        bn::fixed y = _combo_y - COMBO_RISE * (1 - t);           // slow drift up
+
+        for(bn::sprite_ptr& sprite : _combo_sprites)
+        {
+            sprite.set_y(y);
+        }
+
+        if(_combo_life == 0)
+        {
+            _combo_sprites.clear();
+            bn::blending::set_transparency_alpha(1);
+        }
+    }
+}
+
+void game_scene::_end_combo()
+{
+    _combo_count = 0;
+    _combo_timer = 0;
+    _combo_life = 0;
+    _combo_sprites.clear();
+
+    // Release the shared transparency weight so other blended sprites (none today,
+    // but future-proofed) render at full opacity.
+    bn::blending::set_transparency_alpha(1);
 }
 
 bn::optional<scene_type> game_scene::update()
@@ -231,11 +356,34 @@ bn::optional<scene_type> game_scene::update()
 
     step_physics(_fruits);
 
-    int guard = 0;
-
-    while(try_merge(_fruits, _score) && guard < 32)
+    if(_merge_cooldown > 0)
     {
-        ++guard;
+        --_merge_cooldown;
+    }
+
+    bool corrupt_story_merge = false;
+    bn::fixed merge_x = 0;
+    bn::fixed merge_y = 0;
+    int score_before = _score;
+
+    // Resolve at most one merge per short cooldown so chained or simultaneous
+    // merges play out one at a time and stay visible, instead of all popping on
+    // the same frame.
+    if(_merge_cooldown == 0 && try_merge(_fruits, _score, corrupt_story_merge, merge_x, merge_y))
+    {
+        _merge_cooldown = MERGE_COOLDOWN;
+        _register_combo_merge(_score - score_before, merge_x, merge_y);
+    }
+
+    _update_combo();
+
+    // First time a corrupted fruit merges with a matching normal fruit (type
+    // CORRUPT_STORY_MERGE_TYPE) during the Corrupted Fruits story beat: play the
+    // creepy sequence and advance the story so this only ever fires once.
+    if(corrupt_story_merge && story_progress == STORY_CORRUPTED_FRUITS)
+    {
+        story_set_progress(STORY_CORRUPTED_FRUITS_DONE);
+        return scene_type::creepy_corrupted;
     }
 
     for(fruit_t& f : _fruits)
@@ -350,6 +498,8 @@ bn::optional<scene_type> game_scene::update()
             {
                 segment.set_visible(false);
             }
+
+            _end_combo();
 
             if(! _score_saved)
             {

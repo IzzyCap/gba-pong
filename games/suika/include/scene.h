@@ -12,6 +12,8 @@ enum class scene_type
     settings,
     creepy_game_over,
     creepy_admin,
+    creepy_corrupted,
+    beepboy,
     game
 };
 

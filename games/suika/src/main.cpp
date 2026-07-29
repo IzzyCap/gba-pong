@@ -20,6 +20,7 @@
 #include "menu_scene.h"
 #include "settings_scene.h"
 #include "creepy_scene.h"
+#include "beepboy_scene.h"
 #include "game_scene.h"
 #include "settings.h"
 #include "story.h"
@@ -43,6 +44,13 @@ namespace
             return bn::unique_ptr<suika::scene>(
                 new suika::creepy_scene(text_generator, suika::scene_type::settings));
 
+        case suika::scene_type::creepy_corrupted:
+            return bn::unique_ptr<suika::scene>(
+                new suika::creepy_scene(text_generator, suika::scene_type::menu));
+
+        case suika::scene_type::beepboy:
+            return bn::unique_ptr<suika::scene>(new suika::beepboy_scene(text_generator));
+
         case suika::scene_type::game:
             return bn::unique_ptr<suika::scene>(new suika::game_scene(text_generator));
 
@@ -61,6 +69,11 @@ int main()
 
     // Restore how far the player has progressed through the hidden storyline.
     suika::story_load();
+
+    // Bouncing Fruits is a permanent, story-tied dev tool: it stays active once
+    // the player has reached STORY_BOUNCING_FRUITS, so derive it from the story
+    // rather than persisting a separate SRAM flag.
+    suika::bouncing_fruits = suika::story_progress >= suika::STORY_BOUNCING_FRUITS;
 
     bn::sprite_text_generator text_generator(common::variable_8x8_sprite_font);
 

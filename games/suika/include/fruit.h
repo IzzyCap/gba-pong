@@ -26,6 +26,12 @@ constexpr int CORRUPTED_TYPES = 10;   // corrupted_fruit_0 .. corrupted_fruit_9
 constexpr int CORRUPT_FRAMES = 3;    // max vertical frames in a corrupted_fruit_<n>.bmp
                                      // (some, like corrupted_fruit_1, have fewer and stay static)
 
+// The hidden story beat fires when a corrupted fruit of this type merges with a
+// normal fruit of the same type. Type 8 is the last merge in the chain (two
+// fruit_8 combine into the biggest fruit_9), so this is the corrupted_fruit_8 +
+// fruit_8 reveal.
+constexpr int CORRUPT_STORY_MERGE_TYPE = 8;
+
 // Play area, in screen coordinates (centre of the screen is 0,0).
 constexpr bn::fixed LEFT = -58;
 constexpr bn::fixed RIGHT = 58;
@@ -70,7 +76,13 @@ void create_corrupted_tiles(int type,
 void step_physics(fruit_vector& fruits);
 
 // Merges one touching same-type pair (if any) and returns true when it did.
-bool try_merge(fruit_vector& fruits, int& score);
+// When that merge combines a corrupted fruit with a normal fruit of type
+// CORRUPT_STORY_MERGE_TYPE, corrupt_story_merge is set to true (it is never
+// cleared here) so callers can react to that specific story-relevant merge.
+// On a merge, merge_x / merge_y receive the position where the fruits combined
+// so callers can anchor effects (e.g. the combo readout) to that spot.
+bool try_merge(fruit_vector& fruits, int& score, bool& corrupt_story_merge,
+               bn::fixed& merge_x, bn::fixed& merge_y);
 
 [[nodiscard]] bool is_overflowing(const fruit_vector& fruits);
 

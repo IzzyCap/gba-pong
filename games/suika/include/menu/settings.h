@@ -26,6 +26,13 @@ inline bool dev_tools_pending = false;
 // Developer Tools toggle (no gameplay effect yet).
 inline bool corrupted_fruits = false;
 
+// Developer Tools toggle unlocked once the corrupted-fruits story beat is done.
+// Turning it on makes every fruit -- and every merge shove -- bounce twice as
+// hard. It is a permanent, one-way switch tied to the story, so instead of
+// living in the settings SRAM block it is re-derived from story_progress on boot
+// (see main). This keeps it from ever desyncing from STORY_BOUNCING_FRUITS.
+inline bool bouncing_fruits = false;
+
 // Persistent settings stored in SRAM so the admin panel stays unlocked and the
 // Corrupted Fruits toggle is remembered across power cycles. The magic value
 // tells a freshly initialized (garbage) SRAM apart from real saved data.
@@ -36,7 +43,7 @@ struct settings_save_data
     bool corrupted_fruits;
 };
 
-inline constexpr char SETTINGS_SAVE_MAGIC[4] = { 'A', 'D', 'M', 'N' };
+inline constexpr char SETTINGS_SAVE_MAGIC[4] = { 'A', 'D', 'M', '2' };
 
 // SRAM byte offset for the settings block. High scores occupy the start of SRAM
 // (offset 0), so the admin settings live further along to avoid clobbering them.
