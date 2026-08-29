@@ -196,9 +196,9 @@ namespace suika
         return radii[type];
     }
 
-    bn::sprite_ptr create_fruit_sprite(int type, bn::fixed x, bn::fixed y, bool corrupted)
+    bn::sprite_ptr create_fruit_sprite(int type, bn::fixed x, bn::fixed y, bool corrupted, bool bugged)
     {
-        if(corrupted)
+        if(corrupted && ! bugged)
         {
             if(const bn::sprite_item* item = corrupted_sprite_item(type))
             {
@@ -206,19 +206,32 @@ namespace suika
             }
         }
 
-        switch(type)
+        bn::sprite_ptr sprite = [&]
         {
-        case 0:  return bn::sprite_items::fruit_0.create_sprite(x, y);
-        case 1:  return bn::sprite_items::fruit_1.create_sprite(x, y);
-        case 2:  return bn::sprite_items::fruit_2.create_sprite(x, y);
-        case 3:  return bn::sprite_items::fruit_3.create_sprite(x, y);
-        case 4:  return bn::sprite_items::fruit_4.create_sprite(x, y);
-        case 5:  return bn::sprite_items::fruit_5.create_sprite(x, y);
-        case 6:  return bn::sprite_items::fruit_6.create_sprite(x, y);
-        case 7:  return bn::sprite_items::fruit_7.create_sprite(x, y);
-        case 8:  return bn::sprite_items::fruit_8.create_sprite(x, y);
-        default: return bn::sprite_items::fruit_9.create_sprite(x, y);
+            switch(type)
+            {
+            case 0:  return bn::sprite_items::fruit_0.create_sprite(x, y);
+            case 1:  return bn::sprite_items::fruit_1.create_sprite(x, y);
+            case 2:  return bn::sprite_items::fruit_2.create_sprite(x, y);
+            case 3:  return bn::sprite_items::fruit_3.create_sprite(x, y);
+            case 4:  return bn::sprite_items::fruit_4.create_sprite(x, y);
+            case 5:  return bn::sprite_items::fruit_5.create_sprite(x, y);
+            case 6:  return bn::sprite_items::fruit_6.create_sprite(x, y);
+            case 7:  return bn::sprite_items::fruit_7.create_sprite(x, y);
+            case 8:  return bn::sprite_items::fruit_8.create_sprite(x, y);
+            default: return bn::sprite_items::fruit_9.create_sprite(x, y);
+            }
+        }();
+
+        // A bugged fruit is drawn as its shape only: enabling the window attribute
+        // turns the sprite invisible and makes its silhouette the region where the
+        // red number background is revealed.
+        if(bugged)
+        {
+            sprite.set_window_enabled(true);
         }
+
+        return sprite;
     }
 
     bool type_has_corrupted(int type)
@@ -354,6 +367,37 @@ namespace suika
                     if(d2 <= rr * rr + 2)
                     {
                         int type = a.type;
+
+                        // Bugged fruits merge the wrong way: a same-size pair
+                        // shrinks into a single bugged fruit one step smaller, and
+                        // a pair of bugged fruit_0 simply vanishes. This runs
+                        // before the normal path, so a bugged fruit poisons any
+                        // matching fruit it touches.
+                        if(a.bugged || b.bugged)
+                        {
+                            bn::fixed nx = (a.x + b.x) / 2;
+                            bn::fixed ny = (a.y + b.y) / 2;
+                            bn::fixed nvx = (a.vx + b.vx) / 2;
+                            bn::fixed nvy = (a.vy + b.vy) / 2;
+
+                            merge_x = nx;
+                            merge_y = ny;
+
+                            remove_fruit(fruits, j);  // j > i, so remove it first
+                            remove_fruit(fruits, i);
+
+                            if(type > 0)
+                            {
+                                int nt = type - 1;
+                                fruits.push_back({nx, ny, nvx, nvy, nt,
+                                                create_fruit_sprite(nt, nx, ny, false, true),
+                                                false, true});
+                            }
+                            // type 0 disappears: nothing pushed, no score.
+
+                            return true;
+                        }
+
                         // Corruption spreads: the merged fruit is corrupted if
                         // either of its parents was.
                         bool corrupt = a.corrupted || b.corrupted;

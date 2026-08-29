@@ -33,6 +33,14 @@ inline bool corrupted_fruits = false;
 // (see main). This keeps it from ever desyncing from STORY_BOUNCING_FRUITS.
 inline bool bouncing_fruits = false;
 
+// Developer Tools toggle unlocked once the player scores 1000 points with
+// Bouncing Fruits active. Turning it on makes a "bugged" fruit (the size of
+// fruit_3) appear every 8 throws; it shrinks a step each time it merges with a
+// same-size fruit and vanishes below fruit_0. Like Bouncing Fruits it is a
+// permanent, story-tied switch, re-derived from story_progress on boot (see
+// main) so it never desyncs from STORY_BUGGED_FRUITS.
+inline bool bugged_fruits = false;
+
 // Persistent settings stored in SRAM so the admin panel stays unlocked and the
 // Corrupted Fruits toggle is remembered across power cycles. The magic value
 // tells a freshly initialized (garbage) SRAM apart from real saved data.

@@ -51,6 +51,7 @@ struct fruit_t
     int type;
     bn::sprite_ptr sprite;
     bool corrupted = false;   // true for the special first fruit and anything it merges into
+    bool bugged = false;      // true for the "bugged" fruits that shrink as they merge
 };
 
 using fruit_vector = bn::vector<fruit_t, MAX_FRUITS>;
@@ -61,8 +62,13 @@ using fruit_vector = bn::vector<fruit_t, MAX_FRUITS>;
 // When corrupted is true, a fruit whose type has corrupted art uses the animated
 // corrupted_fruit_<type> sprite; types without corrupted art fall back to the
 // normal design (but still spread corruption when they merge).
+//
+// When bugged is true the sprite is created as an invisible sprite-window mask
+// (the normal fruit_<type> silhouette with the window attribute enabled), so the
+// animated number background shows through the fruit's shape instead of any art.
 [[nodiscard]] bn::sprite_ptr create_fruit_sprite(int type, bn::fixed x, bn::fixed y,
-                                                 bool corrupted = false);
+                                                 bool corrupted = false,
+                                                 bool bugged = false);
 
 // True when a fruit type has an animated corrupted_fruit_<type> sprite.
 [[nodiscard]] bool type_has_corrupted(int type);

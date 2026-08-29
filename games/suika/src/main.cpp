@@ -75,6 +75,10 @@ int main()
     // rather than persisting a separate SRAM flag.
     suika::bouncing_fruits = suika::story_progress >= suika::STORY_BOUNCING_FRUITS;
 
+    // Bugged Fruits is likewise permanent and story-tied: active once the player
+    // has reached STORY_BUGGED_FRUITS.
+    suika::bugged_fruits = suika::story_progress >= suika::STORY_BUGGED_FRUITS;
+
     bn::sprite_text_generator text_generator(common::variable_8x8_sprite_font);
 
     bn::unique_ptr<suika::scene> scene = make_scene(suika::scene_type::menu, text_generator);

@@ -2,6 +2,7 @@
 
 #include "bn_keypad.h"
 #include "bn_string.h"
+#include "bn_window.h"
 #include "bn_blending.h"
 #include "bn_algorithm.h"
 
@@ -12,6 +13,7 @@
 #include "bn_regular_bg_items_suika_bg.h"
 #include "bn_regular_bg_items_suika_game_zone.h"
 #include "bn_regular_bg_items_beepboy.h"
+#include "bn_regular_bg_items_number_bg.h"
 #include "bn_sprite_items_drop_line.h"
 
 namespace suika
@@ -64,6 +66,16 @@ namespace
     constexpr int COMBO_POPUP_LIFE = 30;         // ~0.5 s to fade out
     constexpr bn::fixed COMBO_RISE = 12;         // pixels the popup drifts up over its life
     constexpr int COMBO_UI_PRIORITY = 1;         // draw the readout in front of fruits (pr 3)
+
+    // Bugged Fruits developer tool.
+    constexpr int BUGGED_SPAWN_EVERY = 8;        // one bugged fruit appears every 8 throws
+    constexpr int BUGGED_FRUIT_TYPE = 3;         // it spawns at fruit_3's size
+    constexpr int BUGGED_BG_PRIORITY = 2;        // number bg draws in front of the jar (pr 3)
+    constexpr bn::fixed BUGGED_BG_SCROLL = 1;    // vertical scroll per frame: streams the digits
+
+    // Scoring 1000 points with Bouncing Fruits active unlocks the Bugged Fruits
+    // developer tool (revealed in the settings Developer Tools menu afterwards).
+    constexpr int BUGGED_UNLOCK_SCORE = 1000;
 }
 
 game_scene::game_scene(bn::sprite_text_generator& text_generator) :
@@ -100,6 +112,21 @@ game_scene::game_scene(bn::sprite_text_generator& text_generator) :
     else
     {
         _bg.set_z_order(1);  // higher z order = drawn first (further back)
+    }
+
+    // Bugged Fruits: bring up the animated red 0/1 background and mask it to the
+    // sprite window, so it is only visible through the silhouettes of the bugged
+    // fruits (whose own sprites are invisible window masks). It draws in front of
+    // the jar so a bugged fruit reads as a fruit-shaped patch of streaming digits.
+    if(bugged_fruits)
+    {
+        _number_bg = bn::regular_bg_items::number_bg.create_bg(0, 0);
+        _number_bg->set_priority(BUGGED_BG_PRIORITY);
+
+        bn::window::internal().set_show_bg(*_number_bg, false);
+        bn::window::external().set_show_bg(*_number_bg, false);
+        bn::window::outside().set_show_bg(*_number_bg, false);
+        bn::window::sprites().set_show_bg(*_number_bg, true);
     }
 
     // Aim guide: stacked segments that follow the cursor. They share the fruits'
@@ -352,6 +379,19 @@ bn::optional<scene_type> game_scene::update()
 
         r = fruit_radius(_current_type);
         _cursor_x = bn::clamp(_cursor_x, LEFT + r, RIGHT - r);
+
+        // Bugged Fruits: every 8th throw a bugged fruit (fruit_3 size) drops in at
+        // a random column. It carries its own falling velocity like any drop.
+        if(bugged_fruits && (++_throw_count % BUGGED_SPAWN_EVERY) == 0 &&
+           _fruits.size() < MAX_FRUITS)
+        {
+            bn::fixed br = fruit_radius(BUGGED_FRUIT_TYPE);
+            bn::fixed bx = _random.get_int((LEFT + br).integer(), (RIGHT - br).integer() + 1);
+            _fruits.push_back({bx, SPAWN_Y, bn::fixed(0), bn::fixed(0.5),
+                               BUGGED_FRUIT_TYPE,
+                               create_fruit_sprite(BUGGED_FRUIT_TYPE, bx, SPAWN_Y, false, true),
+                               false, true});
+        }
     }
 
     step_physics(_fruits);
@@ -372,10 +412,25 @@ bn::optional<scene_type> game_scene::update()
     if(_merge_cooldown == 0 && try_merge(_fruits, _score, corrupt_story_merge, merge_x, merge_y))
     {
         _merge_cooldown = MERGE_COOLDOWN;
-        _register_combo_merge(_score - score_before, merge_x, merge_y);
+
+        // Bugged-fruit merges score nothing (they shrink instead of growing), so
+        // only start a combo for a real, point-scoring merge.
+        if(_score > score_before)
+        {
+            _register_combo_merge(_score - score_before, merge_x, merge_y);
+        }
     }
 
     _update_combo();
+
+    // Scoring 1000 points while Bouncing Fruits is active is the story beat that
+    // unlocks the Bugged Fruits developer tool. Advance the story once so the new
+    // option reveals itself in the Developer Tools menu from now on.
+    if(bouncing_fruits && _score >= BUGGED_UNLOCK_SCORE &&
+       story_progress == STORY_BOUNCING_FRUITS)
+    {
+        story_set_progress(STORY_BOUNCING_FRUITS_DONE);
+    }
 
     // First time a corrupted fruit merges with a matching normal fruit (type
     // CORRUPT_STORY_MERGE_TYPE) during the Corrupted Fruits story beat: play the
@@ -413,6 +468,13 @@ bn::optional<scene_type> game_scene::update()
         segment.set_x(_cursor_x);
         segment.set_tiles(line_frame);
         segment.set_visible(_drop_cooldown == 0);
+    }
+
+    // Stream the bugged-fruit number background downward so the digits keep
+    // changing. It wraps on the 256x256 map, so a plain scroll loops seamlessly.
+    if(_number_bg)
+    {
+        _number_bg->set_y(_number_bg->y() + BUGGED_BG_SCROLL);
     }
 
     // Corrupted fruits animate on one shared clock: frame 0 dwells for a random

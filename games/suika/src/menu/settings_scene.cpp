@@ -30,6 +30,7 @@ namespace
     constexpr int DEV_OPTION_COUNT = 4;
     constexpr int DEV_OPTION_CORRUPTED = 0;
     constexpr int DEV_OPTION_BOUNCING = 1;   // unlocked once STORY_CORRUPTED_FRUITS_DONE is reached
+    constexpr int DEV_OPTION_BUGGED = 2;     // unlocked once STORY_BOUNCING_FRUITS_DONE is reached
 
     // Developer Tools stay locked (grayed, not enterable) until the player has
     // read Player 1's first message, which moves the story to STORY_CORRUPTED_FRUITS.
@@ -422,6 +423,12 @@ void settings_scene::_refresh_dev_tools()
             // beat is done; before that it stays a "?????" placeholder below.
             _draw_dev_toggle(y, selected, "Bouncing Fruits: ", bouncing_fruits);
         }
+        else if(i == DEV_OPTION_BUGGED && story_progress >= STORY_BOUNCING_FRUITS_DONE)
+        {
+            // Bugged Fruits reveals itself once the player has scored 1000 points
+            // with Bouncing Fruits active; before that it stays a "?????" below.
+            _draw_dev_toggle(y, selected, "Bugged Fruits: ", bugged_fruits);
+        }
         else
         {
             // "?????" placeholders are always disabled and drawn grayed out.
@@ -766,6 +773,23 @@ bn::optional<scene_type> settings_scene::_update_dev_tools()
             if(story_progress < STORY_BOUNCING_FRUITS)
             {
                 story_set_progress(STORY_BOUNCING_FRUITS);
+            }
+
+            _refresh_options();
+            return bn::nullopt;
+        }
+        else if(_dev_selected == DEV_OPTION_BUGGED &&
+                story_progress >= STORY_BOUNCING_FRUITS_DONE && ! bugged_fruits)
+        {
+            // Activating Bugged Fruits is permanent: from now on a bugged fruit
+            // appears every 8 throws. Lock it On and move the story on. It persists
+            // through STORY_BUGGED_FRUITS (re-derived on boot), so there's no
+            // separate settings save here.
+            bugged_fruits = true;
+
+            if(story_progress < STORY_BUGGED_FRUITS)
+            {
+                story_set_progress(STORY_BUGGED_FRUITS);
             }
 
             _refresh_options();

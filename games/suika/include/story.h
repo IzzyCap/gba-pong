@@ -21,6 +21,8 @@ enum story_stage
     STORY_CORRUPTED_FRUITS, // the player activated the Corrupted Fruits dev tool
     STORY_CORRUPTED_FRUITS_DONE, // merged a corrupted_fruit_8 with a fruit_8 for the first time
     STORY_BOUNCING_FRUITS,  // the player activated the Bouncing Fruits dev tool (fruits bounce twice as hard)
+    STORY_BOUNCING_FRUITS_DONE, // scored 1000 points with Bouncing Fruits active; unlocks Bugged Fruits
+    STORY_BUGGED_FRUITS,    // the player activated the Bugged Fruits dev tool
     STORY_ENDING,             // the story has reached its final beat (no more content)
 };
 

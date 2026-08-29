@@ -31,6 +31,9 @@ private:
     // Hidden reveal: once the corrupted fruit_8 story beat is done, beepboy lurks
     // between the jar-room backdrop and the jar.
     bn::optional<bn::regular_bg_ptr> _beepboy_bg;
+    // Bugged Fruits: an animated red 0/1 background, masked by the sprite window
+    // to the silhouettes of the bugged fruits so it only shows through their shape.
+    bn::optional<bn::regular_bg_ptr> _number_bg;
     bn::random _random;
     fruit_vector _fruits;
     bn::vector<bn::sprite_ptr, 24> _score_sprites;
@@ -63,6 +66,7 @@ private:
     bn::fixed _cursor_x = 0;
     int _drop_cooldown = 0;
     int _merge_cooldown = 0;   // short pause between merges so each stays visible
+    int _throw_count = 0;      // fruits dropped this run (drives the bugged-fruit spawn)
     int _score = 0;
     int _last_score = -1;
     int _overflow_frames = 0;
